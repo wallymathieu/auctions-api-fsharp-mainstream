@@ -186,7 +186,7 @@ type ApiTests() =
         match testEvents with
         | [BidAccepted(_, bid); AuctionAdded(_, _)] ->
             bid.ForAuction |> should equal 1L
-            bid.BidAmount |> should equal (createAmount VAC 11L)
+            bid.BidAmount |> should equal (createAmount Currency.VAC 11L)
         | _ -> 
             Assert.Fail("Expected BidAccepted event")
             

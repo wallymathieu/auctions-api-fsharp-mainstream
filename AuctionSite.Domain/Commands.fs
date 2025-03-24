@@ -1,7 +1,6 @@
 namespace AuctionSite.Domain
 
 open System
-open System.Collections.Generic
 
 /// Commands that can be executed in the system
 type Command =
@@ -69,3 +68,4 @@ module Repository =
                     Error err, repository
             | None ->
                 Error(UnknownAuction auctionId), repository
+

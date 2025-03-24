@@ -21,7 +21,7 @@ let sampleAuctionOfType typ =
         StartsAt = sampleStartsAt
         Expiry = sampleEndsAt
         Seller = sampleSeller
-        AuctionCurrency = SEK
+        AuctionCurrency = Currency.SEK
         Type = typ
     }
 
@@ -29,7 +29,7 @@ let sampleAuctionOfType typ =
 let sampleAuction = sampleAuctionOfType (SingleSealedBid Vickrey)
 
 // Create a SEK amount
-let sek amount = createAmount SEK amount
+let sek amount = createAmount Currency.SEK amount
 
 // Sample bid
 let sampleBid = {

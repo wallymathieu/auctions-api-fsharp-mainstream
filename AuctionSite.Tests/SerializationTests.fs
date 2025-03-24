@@ -3,6 +3,7 @@ module AuctionSite.Tests.SerializationTests
 open System
 open System.IO
 open System.Text.Json
+open AuctionSite.Money
 open NUnit.Framework
 open FsUnit
 open AuctionSite
@@ -15,7 +16,7 @@ type SerializationTests() =
     let tmpSampleCommands = "./tmp/test-sample-commands.jsonl"
     let sampleCommandsFile = "./test-samples/sample-commands.jsonl"
     
-    let vac0 = Money.createAmount Money.VAC 0L
+    let vac0 = createAmount Currency.VAC 0L
     let timedAscending = TimedAscending { 
         ReservePrice = vac0
         MinRaise = vac0
@@ -24,13 +25,7 @@ type SerializationTests() =
     
     let addAuction = AddAuction(sampleStartsAt, sampleAuction)
     let bid = PlaceBid(sampleBidTime, bid1)
-    
-    let serializeOptions =
-        let options = JsonSerializerOptions()
-        options.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
-        options.WriteIndented <- false
-        options
-    
+        
     // Helper function to set up the temp directory for tests
     let setupTempDirectory() =
         let dir = Path.GetDirectoryName(tmpSampleCommands)
@@ -52,8 +47,8 @@ type SerializationTests() =
         if not (File.Exists(sampleCommandsFile)) then
             // Create some sample commands
             let commands = [
-                """{"$type":"AddAuction","at":"2020-05-17T08:15:16.464Z","auction":{"id":1,"startsAt":"2018-12-01T10:00:00.000Z","title":"Some auction","expiry":"2020-05-18T10:00:00.000Z","user":"BuyerOrSeller|a1|Test","type":"English|VAC0|VAC0|0","currency":"VAC"}}"""
-                """{"$type":"PlaceBid","at":"2020-05-17T08:15:22.948Z","bid":{"auction":1,"user":"BuyerOrSeller|a2|Buyer","amount":"VAC11","at":"2020-05-17T08:15:22.940Z"}}"""
+                """[{"Case":"AddAuction","Fields":["2023-05-17T08:15:16.464Z",{"id":1,"startsAt":"2023-01-01T10:00:00.000Z","title":"French Impressionist Painting","expiry":"2023-06-01T10:00:00.000Z","user":"BuyerOrSeller|seller1|Art Gallery","type":"English|VAC0|VAC0|0","currency":"VAC"}]}]"""
+                """[{"Case":"PlaceBid","Fields":["2023-05-17T08:15:22.948Z",{"auction":1,"user":"BuyerOrSeller|buyer1|Art Collector","amount":"VAC500","at":"2023-05-17T08:15:22.940Z"}]}]"""
             ]
             File.WriteAllLines(sampleCommandsFile, commands)
     
@@ -70,15 +65,15 @@ type SerializationTests() =
     [<Test>]
     member _.``Can parse Amount``() =
         let amountStr = "VAC0"
-        let amount = Money.tryParse amountStr
+        let amount = tryParseAmount amountStr
         
         amount |> should equal (Some vac0)
         
     [<Test>]
     member _.``Can serialize and deserialize Amount``() =
         let amount = vac0
-        let serialized = Money.toString amount
-        let deserialized = Money.tryParse serialized
+        let serialized = string amount
+        let deserialized = tryParseAmount serialized
         
         deserialized |> should equal (Some amount)
         
@@ -153,18 +148,14 @@ type SerializationTests() =
     
     [<Test>]
     member _.``Can serialize AddAuction command``() =
-        let serialized = JsonSerializer.Serialize(addAuction, serializeOptions)
+        let serialized = JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
         
         // Check that the serialized string contains expected parts
-        serialized |> should contain "\"$type\":\"AddAuction\""
-        serialized |> should contain "\"at\":"
-        serialized |> should contain "\"auction\":"
+        serialized |> should contain "\"Case\":\"AddAuction\""
         
     [<Test>]
     member _.``Can serialize PlaceBid command``() =
-        let serialized = JsonSerializer.Serialize(bid, serializeOptions)
+        let serialized = JsonSerializer.Serialize(bid, Serialization.serializerOptions())
         
         // Check that the serialized string contains expected parts
-        serialized |> should contain "\"$type\":\"PlaceBid\""
-        serialized |> should contain "\"at\":"
-        serialized |> should contain "\"bid\":"
+        serialized |> should contain "\"Case\":\"PlaceBid\""

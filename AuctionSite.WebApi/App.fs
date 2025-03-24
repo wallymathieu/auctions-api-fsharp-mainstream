@@ -170,16 +170,19 @@ module Handler =
                 logger.LogError(ex, "An unhandled exception has occurred while executing the request.")
                 ServerErrors.INTERNAL_ERROR "Internal Server Error" next ctx
                 
-        app.UseGiraffe(
-            choose [
-                auctionRoutes
-                notFoundHandler
-            ]
+        app
+            .UseGiraffeErrorHandler(errorHandler)
+            .UseGiraffe(
+                choose [
+                    auctionRoutes
+                    notFoundHandler
+                ]
         )
-        
+
     /// Configure services for the web application
     let configureServices (services: IServiceCollection) =
         services
+            .AddSingleton<Json.ISerializer>(Json.FsharpFriendlySerializer(jsonOptions=Serialization.serializerOptions()))
             .AddGiraffe()
             .AddCors(fun options ->
                 options.AddPolicy("CorsPolicy", fun builder ->

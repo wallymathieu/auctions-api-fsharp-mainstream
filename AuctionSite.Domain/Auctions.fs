@@ -1,6 +1,7 @@
 namespace AuctionSite.Domain
 
 open System
+open System.Text.Json.Serialization
 open AuctionSite.Money
 
 /// Types of auctions supported in the system
@@ -23,13 +24,20 @@ type AuctionType =
 
 /// Represents an auction in the system
 type Auction = {
+    [<JsonPropertyName("id")>]
     AuctionId: AuctionId
+    [<JsonPropertyName("startsAt")>]
     StartsAt: DateTime
+    [<JsonPropertyName("title")>]
     Title: string
     /// Initial expiry time
+    [<JsonPropertyName("expiry")>]
     Expiry: DateTime
+    [<JsonPropertyName("user")>]
     Seller: User
+    [<JsonPropertyName("type")>]
     Type: AuctionType
+    [<JsonPropertyName("currency")>]
     AuctionCurrency: Currency
 }
 

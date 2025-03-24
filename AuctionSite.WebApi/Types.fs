@@ -60,7 +60,7 @@ type AuctionDetailResponse = {
 module ResponseConverters =
     /// Convert a bid to an API response
     let toAuctionBidResponse (bid: Bid) : AuctionBidResponse = {
-        Amount = toString bid.BidAmount
+        Amount = string bid.BidAmount
         Bidder = bid.Bidder.ToString()
     }
     
@@ -102,7 +102,7 @@ module RequestConverters =
     
     /// Convert an auction request to a domain auction
     let toAuction (req: AddAuctionRequest) (seller: User) : Auction =
-        let currency = defaultArg req.Currency VAC
+        let currency = defaultArg req.Currency Currency.VAC
         let auctionType = 
             match req.Type with
             | Some typeStr ->

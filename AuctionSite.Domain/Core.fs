@@ -20,7 +20,7 @@ type User =
         match this with
         | BuyerOrSeller(id, name) -> sprintf "BuyerOrSeller|%s|%s" id name
         | Support(id) -> sprintf "Support|%s" id
-        
+
 /// Functions for working with User objects
 module User =
     /// Try to parse a user from string representation
@@ -48,3 +48,23 @@ type Errors =
     | InvalidUserData of string
     | MustPlaceBidOverHighestBid of Amount
     | AlreadyPlacedBid
+
+
+open System
+open System.Text.Json.Serialization
+open System.Text.Json
+
+/// JSON converter for the User type
+type UserJsonConverter() =
+    inherit JsonConverter<User>()
+    
+    /// Serialize a User object to JSON
+    override _.Write(writer: Utf8JsonWriter, user: User, options: JsonSerializerOptions) =
+        writer.WriteStringValue(user.ToString())
+    
+    /// Deserialize a User object from JSON
+    override _.Read(reader: byref<Utf8JsonReader>, _: Type, options: JsonSerializerOptions) =
+        let userString = reader.GetString()
+        match User.tryParse userString with
+        | Some user -> user
+        | None -> failwith $"Invalid user format: %s{userString}"

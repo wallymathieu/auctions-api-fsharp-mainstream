@@ -42,7 +42,7 @@ module TimedAscending =
     let tryParseOptions (s: string) =
         let parts = s.Split('|')
         if parts.Length = 4 && parts.[0] = "English" then
-            match tryParse parts.[1], tryParse parts.[2], Int32.TryParse parts.[3] with
+            match tryParseAmount parts.[1], tryParseAmount parts.[2], Int32.TryParse parts.[3] with
             | Some reservePrice, Some minRaise, (true, seconds) ->
                 if reservePrice.Currency = minRaise.Currency then
                     Some {
@@ -57,10 +57,7 @@ module TimedAscending =
     /// Convert TimedAscendingOptions to string
     let optionsToString (options: TimedAscendingOptions) =
         let seconds = int options.TimeFrame.TotalSeconds
-        sprintf "English|%s|%s|%d" 
-            (toString options.ReservePrice) 
-            (toString options.MinRaise) 
-            seconds
+        $"English|%s{string options.ReservePrice}|%s{string options.MinRaise}|%d{seconds}"
     
     /// Implementation of the IState interface for TimedAscendingState
     let rec stateHandler =

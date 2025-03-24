@@ -8,12 +8,6 @@ open AuctionSite.Domain
 
 /// Module for JSON file persistence
 module JsonFile =
-    /// JSON serialize options with converters for domain types
-    let serializeOptions =
-        let options = JsonSerializerOptions()
-        options.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
-        options.WriteIndented <- false
-        options
     
     /// Generic read function for any JSON-decodable type
     let readJsonFile<'T> (path: string) : Async<'T list option> = async {
@@ -26,7 +20,7 @@ module JsonFile =
                     content 
                     |> Array.choose (fun line -> 
                         try 
-                            Some(JsonSerializer.Deserialize<'T>(line, serializeOptions))
+                            Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
                         with
                         | _ -> None)
                     |> Array.toList
@@ -39,7 +33,7 @@ module JsonFile =
     let writeJsonFile<'T> (path: string) (items: 'T list) : Async<unit> = async {
         let serialized = 
             items 
-            |> List.map (fun item -> JsonSerializer.Serialize(item, serializeOptions))
+            |> List.map (fun item -> JsonSerializer.Serialize(item, Serialization.serializerOptions()))
             
         let exists = File.Exists path
         
