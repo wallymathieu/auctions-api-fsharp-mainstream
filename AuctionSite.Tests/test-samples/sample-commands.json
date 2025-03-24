@@ -1,0 +1,6 @@
+{"$type":"AddAuction","at":"2023-05-17T08:15:16.464Z","auction":{"id":1,"startsAt":"2023-01-01T10:00:00.000Z","title":"French Impressionist Painting","expiry":"2023-06-01T10:00:00.000Z","user":"BuyerOrSeller|seller1|Art Gallery","type":"English|VAC0|VAC0|0","currency":"VAC"}}
+{"$type":"AddAuction","at":"2023-05-17T08:15:19.904Z","auction":{"id":2,"startsAt":"2023-01-01T10:00:00.000Z","title":"Antique Watch Collection","expiry":"2023-06-01T10:00:00.000Z","user":"BuyerOrSeller|seller1|Art Gallery","type":"Vickrey","currency":"VAC"}}
+{"$type":"PlaceBid","at":"2023-05-17T08:15:22.948Z","bid":{"auction":1,"user":"BuyerOrSeller|buyer1|Art Collector","amount":"VAC500","at":"2023-05-17T08:15:22.940Z"}}
+{"$type":"PlaceBid","at":"2023-05-17T08:15:25.315Z","bid":{"auction":2,"user":"BuyerOrSeller|buyer1|Art Collector","amount":"VAC750","at":"2023-05-17T08:15:25.314Z"}}
+{"$type":"PlaceBid","at":"2023-05-17T08:15:27.631Z","bid":{"auction":1,"user":"BuyerOrSeller|buyer2|Museum","amount":"VAC600","at":"2023-05-17T08:15:27.631Z"}}
+{"$type":"PlaceBid","at":"2023-05-17T08:15:30.515Z","bid":{"auction":2,"user":"BuyerOrSeller|buyer2|Museum","amount":"VAC800","at":"2023-05-17T08:15:30.515Z"}}

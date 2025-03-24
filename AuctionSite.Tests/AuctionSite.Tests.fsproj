@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="SampleData.fs" />
+    <Compile Include="AuctionStateTests.fs" />
+    <Compile Include="EnglishAuctionTests.fs" />
+    <Compile Include="VickreyAuctionTests.fs" />
+    <Compile Include="BlindAuctionTests.fs" />
+    <Compile Include="SerializationTests.fs" />
+    <Compile Include="ApiTests.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+    <PackageReference Include="FsUnit" Version="5.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.1"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AuctionSite.Domain\AuctionSite.Domain.fsproj" />
+    <ProjectReference Include="..\AuctionSite.Persistence\AuctionSite.Persistence.fsproj" />
+    <ProjectReference Include="..\AuctionSite.WebApi\AuctionSite.WebApi.fsproj" />
+  </ItemGroup>
+
+</Project>

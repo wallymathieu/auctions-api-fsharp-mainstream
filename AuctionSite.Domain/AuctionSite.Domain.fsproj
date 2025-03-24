@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Money.fs" />
+    <Compile Include="Core.fs" />
+    <Compile Include="Bids.fs" />
+    <Compile Include="States.fs" />
+    <Compile Include="SingleSealedBid.fs" />
+    <Compile Include="TimedAscending.fs" />
+    <Compile Include="Auctions.fs" />
+    <Compile Include="Commands.fs" />
+  </ItemGroup>
+
+</Project>

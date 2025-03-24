@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  auction-site:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - auction-data:/app/tmp
+    restart: unless-stopped
+    container_name: auction-site-fsharp
+
+volumes:
+  auction-data:
