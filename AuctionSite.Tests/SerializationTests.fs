@@ -47,8 +47,8 @@ type SerializationTests() =
         if not (File.Exists(sampleCommandsFile)) then
             // Create some sample commands
             let commands = [
-                """[{"Case":"AddAuction","Fields":["2023-05-17T08:15:16.464Z",{"id":1,"startsAt":"2023-01-01T10:00:00.000Z","title":"French Impressionist Painting","expiry":"2023-06-01T10:00:00.000Z","user":"BuyerOrSeller|seller1|Art Gallery","type":"English|VAC0|VAC0|0","currency":"VAC"}]}]"""
-                """[{"Case":"PlaceBid","Fields":["2023-05-17T08:15:22.948Z",{"auction":1,"user":"BuyerOrSeller|buyer1|Art Collector","amount":"VAC500","at":"2023-05-17T08:15:22.940Z"}]}]"""
+                JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
+                JsonSerializer.Serialize(bid, Serialization.serializerOptions())
             ]
             File.WriteAllLines(sampleCommandsFile, commands)
     
@@ -145,17 +145,21 @@ type SerializationTests() =
         | None ->
             Assert.Fail("Failed to read written events")
     }
-    
+    //
     [<Test>]
-    member _.``Can serialize AddAuction command``() =
+    member _.``Can serialize and deserialize AddAuction command``() =
         let serialized = JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
         
         // Check that the serialized string contains expected parts
         serialized |> should contain "\"Case\":\"AddAuction\""
-        
+        let deSerialized = JsonSerializer.Deserialize<Command>(serialized, Serialization.serializerOptions())
+        Assert.That(deSerialized, Is.EqualTo(addAuction))
+
     [<Test>]
     member _.``Can serialize PlaceBid command``() =
         let serialized = JsonSerializer.Serialize(bid, Serialization.serializerOptions())
         
         // Check that the serialized string contains expected parts
         serialized |> should contain "\"Case\":\"PlaceBid\""
+        let deSerialized = JsonSerializer.Deserialize<Command>(serialized, Serialization.serializerOptions())
+        Assert.That(deSerialized, Is.EqualTo(bid))

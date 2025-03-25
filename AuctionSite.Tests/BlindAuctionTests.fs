@@ -18,13 +18,17 @@ type BlindAuctionTests() =
     [<Test>]
     member _.``Can add bid to empty state``() =
         let _, result1 = stateHandler.AddBid bid1 emptyBlindAuctionState
-        result1 |> should equal (Ok())
+        match result1 with
+        | Ok () -> ()
+        | Error err -> Assert.Fail (string err)
 
     [<Test>]
     member _.``Can add second bid``() =
         let state1, _ = stateHandler.AddBid bid1 emptyBlindAuctionState
         let _, result2 = stateHandler.AddBid bid2 state1
-        result2 |> should equal (Ok())
+        match result2 with
+        | Ok () -> ()
+        | Error err -> Assert.Fail (string err)
 
     [<Test>]
     member _.``Can end auction``() =
@@ -71,7 +75,9 @@ type BlindAuctionTests() =
         let stateEnded = stateHandler.Inc sampleEndsAt state1
         
         let _, result = stateHandler.AddBid bid2 stateEnded
-        result |> should equal (Error(AuctionHasEnded sampleAuctionId))
+        match result with
+        | Ok result -> Assert.Fail (string result)
+        | Error err -> err |> should equal (AuctionHasEnded sampleAuctionId)
 
     [<Test>]
     member _.``Increment state tests``() =

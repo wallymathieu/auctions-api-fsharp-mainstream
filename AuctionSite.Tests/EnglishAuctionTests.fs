@@ -17,13 +17,17 @@ type EnglishAuctionTests() =
     [<Test>]
     member _.``Can add bid to empty state``() =
         let _, result1 = stateHandler.AddBid bid1 (emptyAscAuctionState |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state")
-        result1 |> should equal (Ok())
+        match result1 with
+        | Ok () -> ()
+        | Error err -> Assert.Fail (string err)
 
     [<Test>]
     member _.``Can add second bid``() =
         let state1, _ = stateHandler.AddBid bid1 (emptyAscAuctionState |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state")
         let _, result2 = stateHandler.AddBid bid2 state1
-        result2 |> should equal (Ok())
+        match result2 with
+        | Ok () -> ()
+        | Error err -> Assert.Fail (string err)
 
     [<Test>]
     member _.``Can end auction``() =
@@ -45,7 +49,9 @@ type EnglishAuctionTests() =
         let stateEndedAfterTwoBids = stateHandler.Inc sampleEndsAt state2
         
         let _, errAfterEnded = stateHandler.AddBid sampleBid stateEndedAfterTwoBids
-        errAfterEnded |> should equal (Error(AuctionHasEnded 1L))
+        match errAfterEnded with
+        | Ok () -> Assert.Fail "Did not expect success"
+        | Error err -> err |> should equal (AuctionHasEnded 1L)
 
     [<Test>]
     member _.``Can get winner and price from an auction``() =
@@ -62,7 +68,9 @@ type EnglishAuctionTests() =
         let state2, _ = stateHandler.AddBid bid2 state1
         
         let _, maybeFail = stateHandler.AddBid bid_less_than_2 state2
-        maybeFail |> should equal (Error(MustPlaceBidOverHighestBid bidAmount2))
+        match maybeFail with
+        | Ok () -> Assert.Fail "Did not expect ok"
+        | Error err -> err |> should equal (MustPlaceBidOverHighestBid bidAmount2)
 
     [<Test>]
     member _.``Can parse TimedAscending options from string``() =
