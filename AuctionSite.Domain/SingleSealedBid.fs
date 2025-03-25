@@ -2,7 +2,6 @@ namespace AuctionSite.Domain
 
 open System
 open AuctionSite.Money
-open System.Collections.Generic
 
 /// Options for SingleSealedBid auctions
 type SingleSealedBidOptions =
@@ -47,7 +46,7 @@ module SingleSealedBid =
                             bids 
                             |> Map.toList 
                             |> List.map snd 
-                            |> List.sortByDescending (fun bid -> bid.BidAmount.Value)
+                            |> List.sortByDescending _.BidAmount.Value
                         DisclosingBids(sortedBids, expiry, opt)
                     else
                         state

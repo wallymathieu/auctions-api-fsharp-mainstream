@@ -86,7 +86,7 @@ module Handler =
                                 | Error (UnknownAuction _) ->
                                     return! RequestErrors.NOT_FOUND "Auction not found" next ctx
                                 | Error err ->
-                                    return! RequestErrors.BAD_REQUEST (sprintf "%A" err) next ctx
+                                    return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
                             | None ->
                                 return! RequestErrors.NOT_FOUND "Auction not found" next ctx
                         }
@@ -135,7 +135,7 @@ module Handler =
                                 // Return success
                                 return! Successful.OK event next ctx
                             | Error err ->
-                                return! RequestErrors.BAD_REQUEST (sprintf "%A" err) next ctx
+                                return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
                         }
                 ) next ctx
             }
@@ -154,9 +154,9 @@ module Handler =
         let auctionRoutes =
             choose [
                 GET >=> route "/auctions" >=> getAllAuctions appState
-                GET >=> routef "/auction/%d" (fun id -> getAuctionById appState id)
+                GET >=> routef "/auction/%d" (getAuctionById appState)
                 POST >=> route "/auction" >=> createAuction onEvent appState getCurrentTime
-                POST >=> routef "/auction/%d/bid" (fun id -> createBid onEvent appState getCurrentTime id)
+                POST >=> routef "/auction/%d/bid" (createBid onEvent appState getCurrentTime)
             ]
             
         let notFoundHandler =

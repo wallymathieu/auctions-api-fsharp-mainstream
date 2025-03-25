@@ -18,8 +18,8 @@ type User =
         
     override this.ToString() =
         match this with
-        | BuyerOrSeller(id, name) -> sprintf "BuyerOrSeller|%s|%s" id name
-        | Support(id) -> sprintf "Support|%s" id
+        | BuyerOrSeller(id, name) -> $"BuyerOrSeller|%s{id}|%s{name}"
+        | Support(id) -> $"Support|%s{id}"
 
 /// Functions for working with User objects
 module User =
@@ -59,11 +59,11 @@ type UserJsonConverter() =
     inherit JsonConverter<User>()
     
     /// Serialize a User object to JSON
-    override _.Write(writer: Utf8JsonWriter, user: User, options: JsonSerializerOptions) =
+    override _.Write(writer: Utf8JsonWriter, user: User, _: JsonSerializerOptions) =
         writer.WriteStringValue(user.ToString())
     
     /// Deserialize a User object from JSON
-    override _.Read(reader: byref<Utf8JsonReader>, _: Type, options: JsonSerializerOptions) =
+    override _.Read(reader: byref<Utf8JsonReader>, _: Type, _: JsonSerializerOptions) =
         let userString = reader.GetString()
         match User.tryParse userString with
         | Some user -> user

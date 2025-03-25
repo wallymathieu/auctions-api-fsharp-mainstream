@@ -129,8 +129,8 @@ type ApiTests() =
         let! auctions = Helpers.readJsonContent<AuctionListItemResponse list> response
         
         auctions.Length |> should equal 1
-        auctions.[0].Id |> should equal 1L
-        auctions.[0].Title |> should equal "First auction"
+        auctions[0].Id |> should equal 1L
+        auctions[0].Title |> should equal "First auction"
     }
 
     // Test getting auction by ID
@@ -185,7 +185,7 @@ type ApiTests() =
         let! auction = Helpers.readJsonContent<AuctionDetailResponse> auctionResponse
         
         auction.Bids.Length |> should equal 1
-        auction.Bids.[0].Amount |> should equal "VAC11"
+        auction.Bids[0].Amount |> should equal "VAC11"
     }
 
     // Test seller cannot bid on own auction

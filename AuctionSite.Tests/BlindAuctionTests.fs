@@ -112,7 +112,7 @@ type BlindAuctionTests() =
         match endedState with
         | DisclosingBids(bids, _, _) ->
             bids.Length |> should equal 3
-            bids.[0].BidAmount |> should equal (sek 15L)
-            bids.[1].BidAmount |> should equal (sek 10L)
-            bids.[2].BidAmount |> should equal (sek 5L)
+            bids[0].BidAmount |> should equal (sek 15L)
+            bids[1].BidAmount |> should equal (sek 10L)
+            bids[2].BidAmount |> should equal (sek 5L)
         | _ -> Assert.Fail("Expected DisclosingBids state")

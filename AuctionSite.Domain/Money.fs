@@ -19,7 +19,7 @@ module Money =
         Currency: Currency 
         Value: int64
     } with
-        override this.ToString() = sprintf "%A%d" this.Currency this.Value
+        override this.ToString() = $"%A{this.Currency}%d{this.Value}"
 
     let private amountRegex = Regex("(?<currency>[A-Z]+)(?<value>[0-9]+)")
 
@@ -57,7 +57,6 @@ module Money =
             | None -> None
         else None
 
-open System
 open System.Text.Json.Serialization
 open System.Text.Json
 open Money
@@ -67,11 +66,11 @@ type AmountJsonConverter() =
     inherit JsonConverter<Amount>()
     
     /// Serialize a Amount object to JSON
-    override _.Write(writer: Utf8JsonWriter, amount: Amount, options: JsonSerializerOptions) =
+    override _.Write(writer: Utf8JsonWriter, amount: Amount, _: JsonSerializerOptions) =
         writer.WriteStringValue(amount.ToString())
     
     /// Deserialize a Amount object from JSON
-    override _.Read(reader: byref<Utf8JsonReader>, _: Type, options: JsonSerializerOptions) =
+    override _.Read(reader: byref<Utf8JsonReader>, _: Type, _: JsonSerializerOptions) =
         let amountString = reader.GetString()
         match tryParseAmount amountString with
         | Some amount -> amount
