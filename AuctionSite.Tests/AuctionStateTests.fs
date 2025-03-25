@@ -1,10 +1,7 @@
 module AuctionSite.Tests.AuctionStateTests
 
-open System
-open NUnit.Framework
 open FsUnit
 open AuctionSite.Domain
-open AuctionSite.Money
 open AuctionSite.Tests.SampleData
 
 // Base tests for auction states that can be reused in specific auction type tests

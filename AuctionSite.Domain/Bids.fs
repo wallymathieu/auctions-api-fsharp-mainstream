@@ -1,7 +1,6 @@
 namespace AuctionSite.Domain
 
 open System
-open System.Text.Json
 open System.Text.Json.Serialization
 open AuctionSite.Money
 

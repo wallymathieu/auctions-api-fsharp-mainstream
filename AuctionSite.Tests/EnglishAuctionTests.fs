@@ -6,7 +6,6 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Money
 open AuctionSite.Tests.SampleData
-open AuctionSite.Tests.AuctionStateTests
 
 [<TestFixture>]
 type EnglishAuctionTests() =

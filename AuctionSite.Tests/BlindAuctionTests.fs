@@ -1,10 +1,8 @@
 module AuctionSite.Tests.BlindAuctionTests
 
-open System
 open NUnit.Framework
 open FsUnit
 open AuctionSite.Domain
-open AuctionSite.Money
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
 

@@ -1,9 +1,7 @@
 namespace AuctionSite.Persistence
 
-open System
 open System.IO
 open System.Text.Json
-open System.Text.Json.Serialization
 open AuctionSite.Domain
 
 /// Module for JSON file persistence

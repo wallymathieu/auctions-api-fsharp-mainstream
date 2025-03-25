@@ -6,7 +6,6 @@ open System.Text.Json
 open AuctionSite.Money
 open NUnit.Framework
 open FsUnit
-open AuctionSite
 open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
 open AuctionSite.Persistence.JsonFile

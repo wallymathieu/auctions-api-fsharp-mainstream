@@ -1,17 +1,14 @@
 namespace AuctionSite.WebApi
 
 open System
-open System.Threading
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Http
-open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Logging
 open Giraffe
 open System.Threading.Tasks
 open FSharp.Control.Tasks.V2.ContextInsensitive
 open AuctionSite.Domain
-open AuctionSite.Money
 
 /// Application state
 type AppState = {

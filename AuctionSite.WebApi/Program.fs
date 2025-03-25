@@ -3,9 +3,7 @@ module AuctionSite.WebApi.Program
 open System
 open System.IO
 open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 open AuctionSite.Domain
 open AuctionSite.Persistence.JsonFile
 

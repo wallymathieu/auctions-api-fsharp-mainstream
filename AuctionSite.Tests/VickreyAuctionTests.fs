@@ -1,11 +1,8 @@
 module AuctionSite.Tests.VickreyAuctionTests
 
-open System
-open Giraffe.ComputationExpressions
 open NUnit.Framework
 open FsUnit
 open AuctionSite.Domain
-open AuctionSite.Money
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
 

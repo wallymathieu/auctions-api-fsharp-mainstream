@@ -4,10 +4,8 @@ open System
 open System.Net
 open System.Net.Http
 open System.Text
-open System.Threading.Tasks
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.TestHost
-open Microsoft.Extensions.DependencyInjection
 open NUnit.Framework
 open FsUnit
 open AuctionSite.Domain
@@ -79,8 +77,7 @@ type ApiTests() =
         let appState = AppStateInit.initAppState repository
         
         let hostBuilder = WebHostBuilder()
-                            .ConfigureServices(fun services -> 
-                                Handler.configureServices(services) |> ignore)
+                            .ConfigureServices(Handler.configureServices) 
                             .Configure(fun app -> 
                                 Handler.configureApp app appState onEvent getCurrentTime)
         
@@ -177,7 +174,7 @@ type ApiTests() =
         
         // Check events
         match testEvents with
-        | [BidAccepted(_, bid); AuctionAdded(_, _)] ->
+        | [BidAccepted(_, bid); AuctionAdded _] ->
             bid.ForAuction |> should equal 1L
             bid.BidAmount |> should equal (createAmount Currency.VAC 11L)
         | _ -> 
