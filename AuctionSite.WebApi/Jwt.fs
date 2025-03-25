@@ -3,14 +3,18 @@ namespace AuctionSite.WebApi
 open System
 open System.Text
 open System.Text.Json
+open System.Text.Json.Serialization
 open AuctionSite.Domain
 
 /// JWT related functionality
 module Jwt =
     /// JWT payload structure
     type JwtUser = {
+        [<JsonPropertyName("sub")>]
         Sub: string
+        [<JsonPropertyName("name")>]
         Name: string option
+        [<JsonPropertyName("u_typ")>]
         UTyp: string
     }
     
@@ -38,9 +42,7 @@ module Jwt =
     /// Parse JWT payload to JwtUser
     let parseJwtPayload (jsonPayload: string) : Result<JwtUser, string> =
         try
-            let options = JsonSerializerOptions()
-            options.PropertyNameCaseInsensitive <- true
-            let jwtUser = JsonSerializer.Deserialize<JwtUser>(jsonPayload, options)
+            let jwtUser = JsonSerializer.Deserialize<JwtUser>(jsonPayload, Serialization.serializerOptions())
             Ok jwtUser
         with
         | ex -> Error ex.Message
@@ -52,5 +54,5 @@ module Jwt =
             let! jwtUser = parseJwtPayload decoded
             match toUser jwtUser with
             | Ok user -> return user
-            | Error err -> return! Error (sprintf "Invalid user data: %A" err)
+            | Error err -> return! Error $"Invalid user data: %A{err}"
         }

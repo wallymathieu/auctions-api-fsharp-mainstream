@@ -4,7 +4,7 @@ module Serialization =
     open AuctionSite.Domain
     open System.Text.Json
     open System.Text.Json.Serialization
-    let fsharpOptions =
+    let private fsharpOptions =
         JsonFSharpOptions.Default()
             .WithSkippableOptionFields()
 

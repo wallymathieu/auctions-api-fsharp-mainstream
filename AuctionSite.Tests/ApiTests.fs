@@ -31,18 +31,11 @@ module Helpers =
     let firstAuctionReqJson = """{"id":1,"startsAt":"2018-01-01T10:00:00.000Z","endsAt":"2019-01-01T10:00:00.000Z","title":"First auction", "currency":"VAC"}"""
     let bidJson = """{"amount":11}"""
 
-    // Serialize and deserialize JSON
-    let serializeOptions =
-        let options = JsonSerializerOptions()
-        options.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
-        options.WriteIndented <- false
-        options
-
     let serialize<'T> (value: 'T) = 
-        JsonSerializer.Serialize(value, serializeOptions)
+        JsonSerializer.Serialize(value, Serialization.serializerOptions())
 
     let deserialize<'T> (json: string) = 
-        JsonSerializer.Deserialize<'T>(json, serializeOptions)
+        JsonSerializer.Deserialize<'T>(json, Serialization.serializerOptions())
 
     // Create HTTP content from object
     let createJsonContent<'T> (value: 'T) =
