@@ -4,12 +4,15 @@ module Serialization =
     open AuctionSite.Domain
     open System.Text.Json
     open System.Text.Json.Serialization
+    let fsharpOptions =
+        JsonFSharpOptions.Default()
+            .WithSkippableOptionFields()
 
     let private converters : JsonConverter list = [
         UserJsonConverter()
         AmountJsonConverter()
         JsonStringEnumConverter()
-        JsonFSharpConverter(JsonFSharpOptions.Default())
+        JsonFSharpConverter(fsharpOptions)
     ]
     let serializerOptions() =
         let opts = JsonSerializerOptions()

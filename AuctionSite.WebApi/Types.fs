@@ -1,6 +1,7 @@
 namespace AuctionSite.WebApi
 
 open System
+open System.Text.Json.Serialization
 open AuctionSite.Money
 open AuctionSite.Domain
 
@@ -16,11 +17,17 @@ type BidRequest = {
 
 /// Request for adding an auction
 type AddAuctionRequest = {
+    [<JsonPropertyName("id")>]
     Id: AuctionId
+    [<JsonPropertyName("startsAt")>]
     StartsAt: DateTime
+    [<JsonPropertyName("title")>]
     Title: string
+    [<JsonPropertyName("endsAt")>]
     EndsAt: DateTime
+    [<JsonPropertyName("currency")>]
     Currency: Currency option
+    [<JsonPropertyName("type")>]
     Type: string option  // This will be parsed into AuctionType
 }
 
