@@ -6,27 +6,23 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Money
 open AuctionSite.Tests.SampleData
+open AuctionSite.Tests.AuctionTestFixtures
 
 [<TestFixture>]
 type EnglishAuctionTests() =
-    let timedAscAuction = sampleAuctionOfType (TimedAscending (TimedAscending.defaultOptions Currency.SEK))
-    let emptyAscAuctionState = Auction.emptyState timedAscAuction  |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
-    let stateHandler = TimedAscending.stateHandler
+    // Create a test fixture for English auction
+    let auctionType = TimedAscending (TimedAscending.defaultOptions Currency.SEK)
+    let fixture = AuctionTestFixture<TimedAscendingState>(auctionType, TimedAscending.stateHandler)
+    let stateHandler = fixture.StateHandler
+    let emptyAscAuctionState = fixture.EmptyState
 
     [<Test>]
     member _.``Can add bid to empty state``() =
-        let _, result1 = stateHandler.AddBid bid1 emptyAscAuctionState
-        match result1 with
-        | Ok () -> ()
-        | Error err -> Assert.Fail (string err)
+        fixture.CanAddBidToEmptyState()
 
     [<Test>]
     member _.``Can add second bid``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyAscAuctionState
-        let _, result2 = stateHandler.AddBid bid2 state1
-        match result2 with
-        | Ok () -> ()
-        | Error err -> Assert.Fail (string err)
+        fixture.CanAddSecondBid()
 
     [<Test>]
     member _.``Can end auction``() =
@@ -43,14 +39,7 @@ type EnglishAuctionTests() =
 
     [<Test>]
     member _.``Cannot bid after auction has ended``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyAscAuctionState
-        let state2, _ = stateHandler.AddBid bid2 state1
-        let stateEndedAfterTwoBids = stateHandler.Inc sampleEndsAt state2
-        
-        let _, errAfterEnded = stateHandler.AddBid sampleBid stateEndedAfterTwoBids
-        match errAfterEnded with
-        | Ok () -> Assert.Fail "Did not expect success"
-        | Error err -> err |> should equal (AuctionHasEnded 1L)
+        fixture.CannotPlaceBidAfterAuctionHasEnded()
 
     [<Test>]
     member _.``Can get winner and price from an auction``() =

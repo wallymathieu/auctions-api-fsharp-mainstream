@@ -5,28 +5,22 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
+open AuctionSite.Tests.AuctionTestFixtures
 
 [<TestFixture>]
 type BlindAuctionTests() =
-    // Create a Blind auction for testing
-    let blindAuction = sampleAuctionOfType (SingleSealedBid Blind)
-    let emptyBlindAuctionState = Auction.emptyState blindAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
-    let stateHandler = SingleSealedBid.stateHandler
+    // Create a test fixture for Blind auction
+    let fixture = AuctionTestFixture<SingleSealedBidState>(SingleSealedBid Blind, SingleSealedBid.stateHandler)
+    let stateHandler = fixture.StateHandler
+    let emptyBlindAuctionState = fixture.EmptyState
 
     [<Test>]
     member _.``Can add bid to empty state``() =
-        let _, result1 = stateHandler.AddBid bid1 emptyBlindAuctionState
-        match result1 with
-        | Ok () -> ()
-        | Error err -> Assert.Fail (string err)
+        fixture.CanAddBidToEmptyState()
 
     [<Test>]
     member _.``Can add second bid``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyBlindAuctionState
-        let _, result2 = stateHandler.AddBid bid2 state1
-        match result2 with
-        | Ok () -> ()
-        | Error err -> Assert.Fail (string err)
+        fixture.CanAddSecondBid()
 
     [<Test>]
     member _.``Can end auction``() =
@@ -62,31 +56,15 @@ type BlindAuctionTests() =
 
     [<Test>]
     member _.``No winner when no bids placed``() =
-        let stateEndedWithNoBids = stateHandler.Inc sampleEndsAt emptyBlindAuctionState
-        
-        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedWithNoBids
-        maybeAmountAndWinner |> should equal None
+        fixture.NoWinnerWhenNoBidsPlaced()
 
     [<Test>]
     member _.``Cannot place bid after auction has ended``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyBlindAuctionState
-        let stateEnded = stateHandler.Inc sampleEndsAt state1
-        
-        let _, result = stateHandler.AddBid bid2 stateEnded
-        match result with
-        | Ok result -> Assert.Fail (string result)
-        | Error err -> err |> should equal (AuctionHasEnded sampleAuctionId)
+        fixture.CannotPlaceBidAfterAuctionHasEnded()
 
     [<Test>]
     member _.``Increment state tests``() =
-        // Get the increment spec test methods
-        let tests = incrementSpec emptyBlindAuctionState stateHandler
-        
-        tests.CanIncrementTwice()
-        tests.WontEndJustAfterStart()
-        tests.WontEndJustBeforeEnd()
-        tests.WontEndJustBeforeStart()
-        tests.WillHaveEndedJustAfterEnd()
+        fixture.RunIncrementStateTests()
 
     [<Test>]
     member _.``Bids are sorted by amount in descending order when ended``() =
