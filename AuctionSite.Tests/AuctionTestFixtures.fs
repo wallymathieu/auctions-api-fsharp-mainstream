@@ -11,11 +11,21 @@ open AuctionSite.Tests.AuctionStateTests
 type AuctionTestFixture<'T when 'T : equality>(auctionType: AuctionType, stateHandler: IState<'T>) =
     // Create an auction for testing
     let auction = sampleAuctionOfType auctionType
-    let emptyState = 
-        match (auctionType, Auction.emptyState auction) with
-        | (SingleSealedBid _, Choice1Of2 s) -> s :?> 'T
-        | (TimedAscending _, Choice2Of2 s) -> s :?> 'T
-        | _ -> failwithf "Unexpected state type for %A" auctionType
+    
+    // Get the empty state without type casting
+    let emptyState =
+        match auctionType with
+        | SingleSealedBid _ ->
+            let state = Auction.emptyState auction
+            match state with
+            | Choice1Of2 s -> unbox s
+            | _ -> failwithf "Expected SingleSealedBid state for %A" auctionType
+        | TimedAscending _ ->
+            let state = Auction.emptyState auction
+            match state with
+            | Choice2Of2 s -> unbox s
+            | _ -> failwithf "Expected TimedAscending state for %A" auctionType
+        | _ -> failwithf "Unexpected auction type: %A" auctionType
     
     // Properties
     member _.Auction = auction
