@@ -51,24 +51,37 @@ module Handler =
                     return! RequestErrors.UNAUTHORIZED "Bearer" "Auction API" "Unauthorized" next ctx
             }
     
+    /// Validate a bid request
+    let validateBidRequest (req: BidRequest) =
+        if req.Amount <= 0L then
+            Error { Code = "INVALID_AMOUNT"; Message = "Bid amount must be positive"; Details = None }
+        else
+            Ok req
+
     /// Create a bid
     let createBid (onEvent: EventHandler) (appState: AppState) (getCurrentTime: TimeProvider) (auctionId: AuctionId) : HttpHandler =
         fun next ctx ->
             task {
-                let! bidReq = ctx.BindJsonAsync<BidRequest>()
-                
-                return! withAuth (fun user ->
-                    fun next ctx ->
-                        task {
-                            let now = getCurrentTime()
-                            let repository = appState.Auctions
-                            
-                            // Find the auction
-                            match getAuction appState auctionId with
-                            | Some (auction, _) ->
-                                // Create bid
-                                let bid = RequestConverters.toBid bidReq auctionId user now auction.AuctionCurrency
-                                let command = PlaceBid(now, bid)
+                try
+                    let! bidReq = ctx.BindJsonAsync<BidRequest>()
+                    
+                    // Validate request
+                    match validateBidRequest bidReq with
+                    | Error errorResponse ->
+                        return! RequestErrors.BAD_REQUEST errorResponse next ctx
+                    | Ok validatedReq ->
+                        return! withAuth (fun user ->
+                            fun next ctx ->
+                                task {
+                                    let now = getCurrentTime()
+                                    let repository = appState.Auctions
+                                    
+                                    // Find the auction
+                                    match getAuction appState auctionId with
+                                    | Some (auction, _) ->
+                                        // Create bid
+                                        let bid = RequestConverters.toBid validatedReq auctionId user now auction.AuctionCurrency
+                                        let command = PlaceBid(now, bid)
                                 
                                 // Process command
                                 let eventResult, updatedRepo = Repository.handle command repository
@@ -84,9 +97,11 @@ module Handler =
                                     // Return success
                                     return! Successful.OK event next ctx
                                 | Error (UnknownAuction _) ->
-                                    return! RequestErrors.NOT_FOUND "Auction not found" next ctx
+                                    let errorResponse = toErrorResponse (UnknownAuction auctionId)
+                                    return! RequestErrors.NOT_FOUND errorResponse next ctx
                                 | Error err ->
-                                    return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
+                                    let errorResponse = toErrorResponse err
+                                    return! RequestErrors.BAD_REQUEST errorResponse next ctx
                             | None ->
                                 return! RequestErrors.NOT_FOUND "Auction not found" next ctx
                         }
@@ -105,21 +120,36 @@ module Handler =
                     return! RequestErrors.NOT_FOUND "Auction not found" next ctx
             }
     
+    /// Validate an auction request
+    let validateAuctionRequest (req: AddAuctionRequest) =
+        if String.IsNullOrWhiteSpace(req.Title) then
+            Error { Code = "INVALID_TITLE"; Message = "Title cannot be empty"; Details = None }
+        elif req.EndsAt <= req.StartsAt then
+            Error { Code = "INVALID_DATES"; Message = "End time must be after start time"; Details = None }
+        else
+            Ok req
+            
     /// Create an auction
     let createAuction (onEvent: EventHandler) (appState: AppState) (getCurrentTime: TimeProvider) : HttpHandler =
         fun next ctx ->
             task {
-                let! auctionReq = ctx.BindJsonAsync<AddAuctionRequest>()
-                
-                return! withAuth (fun user ->
-                    fun next ctx -> 
-                        task {
-                            let now = getCurrentTime()
-                            let repository = appState.Auctions
-                            
-                            // Create auction
-                            let auction = RequestConverters.toAuction auctionReq user
-                            let command = AddAuction(now, auction)
+                try
+                    let! auctionReq = ctx.BindJsonAsync<AddAuctionRequest>()
+                    
+                    // Validate request
+                    match validateAuctionRequest auctionReq with
+                    | Error errorResponse ->
+                        return! RequestErrors.BAD_REQUEST errorResponse next ctx
+                    | Ok validatedReq ->
+                        return! withAuth (fun user ->
+                            fun next ctx -> 
+                                task {
+                                    let now = getCurrentTime()
+                                    let repository = appState.Auctions
+                                    
+                                    // Create auction
+                                    let auction = RequestConverters.toAuction validatedReq user
+                                    let command = AddAuction(now, auction)
                             
                             // Process command
                             let eventResult, updatedRepo = Repository.handle command repository
@@ -135,9 +165,14 @@ module Handler =
                                 // Return success
                                 return! Successful.OK event next ctx
                             | Error err ->
-                                return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
+                                let errorResponse = toErrorResponse err
+                                return! RequestErrors.BAD_REQUEST errorResponse next ctx
                         }
                 ) next ctx
+                with ex ->
+                    let logger = ctx.GetLogger()
+                    logger.LogError(ex, "Error creating auction")
+                    return! ServerErrors.INTERNAL_ERROR "An error occurred processing your request" next ctx
             }
     
     /// Get all auctions
@@ -165,7 +200,12 @@ module Handler =
         let errorHandler (ex: Exception) (logger: ILogger) =
             fun next ctx ->
                 logger.LogError(ex, "An unhandled exception has occurred while executing the request.")
-                ServerErrors.INTERNAL_ERROR "Internal Server Error" next ctx
+                let errorResponse = {
+                    Code = "INTERNAL_ERROR"
+                    Message = "An unexpected error occurred"
+                    Details = if ctx.Environment.IsDevelopment() then Some(ex.Message) else None
+                }
+                ServerErrors.INTERNAL_ERROR errorResponse next ctx
                 
         app
             .UseGiraffeErrorHandler(errorHandler)

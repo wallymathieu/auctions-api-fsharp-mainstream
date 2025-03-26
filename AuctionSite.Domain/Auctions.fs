@@ -22,21 +22,35 @@ type AuctionType =
             | Some opts -> Some(SingleSealedBid opts)
             | None -> None
 
+/// <summary>
 /// Represents an auction in the system
+/// </summary>
 type Auction = {
+    /// <summary>Unique identifier for the auction</summary>
     [<JsonPropertyName("id")>]
     AuctionId: AuctionId
+    
+    /// <summary>Date and time when the auction starts</summary>
     [<JsonPropertyName("startsAt")>]
     StartsAt: DateTime
+    
+    /// <summary>Title of the auction</summary>
     [<JsonPropertyName("title")>]
     Title: string
-    /// Initial expiry time
+    
+    /// <summary>Initial expiry time for the auction</summary>
     [<JsonPropertyName("expiry")>]
     Expiry: DateTime
+    
+    /// <summary>User who created the auction</summary>
     [<JsonPropertyName("user")>]
     Seller: User
+    
+    /// <summary>Type of auction (TimedAscending or SingleSealedBid)</summary>
     [<JsonPropertyName("type")>]
     Type: AuctionType
+    
+    /// <summary>Currency used for bids in this auction</summary>
     [<JsonPropertyName("currency")>]
     AuctionCurrency: Currency
 }
