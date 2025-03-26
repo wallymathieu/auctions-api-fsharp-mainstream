@@ -12,9 +12,9 @@ type AuctionTestFixture<'T when 'T : equality>(auctionType: AuctionType, stateHa
     // Create an auction for testing
     let auction = sampleAuctionOfType auctionType
     let emptyState = 
-        match Auction.emptyState auction with
-        | Choice1Of2 s when auctionType.IsSingleSealedBid() -> s :?> 'T
-        | Choice2Of2 s when auctionType.IsTimedAscending() -> s :?> 'T
+        match (auctionType, Auction.emptyState auction) with
+        | (SingleSealedBid _, Choice1Of2 s) -> s :?> 'T
+        | (TimedAscending _, Choice2Of2 s) -> s :?> 'T
         | _ -> failwithf "Unexpected state type for %A" auctionType
     
     // Properties
