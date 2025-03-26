@@ -103,9 +103,14 @@ module Handler =
                                     let errorResponse = toErrorResponse err
                                     return! RequestErrors.BAD_REQUEST errorResponse next ctx
                             | None ->
-                                return! RequestErrors.NOT_FOUND "Auction not found" next ctx
+                                let errorResponse = toErrorResponse (UnknownAuction auctionId)
+                                return! RequestErrors.NOT_FOUND errorResponse next ctx
                         }
                 ) next ctx
+                with ex ->
+                    let logger = ctx.GetLogger()
+                    logger.LogError(ex, "Error creating bid")
+                    return! ServerErrors.INTERNAL_ERROR "An error occurred processing your request" next ctx
             }
     
     /// Get an auction by ID
