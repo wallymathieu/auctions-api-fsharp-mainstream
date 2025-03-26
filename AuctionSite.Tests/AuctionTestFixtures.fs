@@ -59,3 +59,26 @@ type AuctionTestFixture<'T>(auctionType: AuctionType, stateHandler: IState<'T>) 
         tests.WontEndJustBeforeEnd()
         tests.WontEndJustBeforeStart()
         tests.WillHaveEndedJustAfterEnd()
+        
+    // Common test for getting winner with single bid
+    member this.GetWinnerWithSingleBid(expectedAmount: Amount, expectedWinner: UserId) =
+        let state1, _ = stateHandler.AddBid bid1 emptyState
+        let stateEndedAfterOneBid = stateHandler.Inc sampleEndsAt state1
+        
+        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedAfterOneBid
+        maybeAmountAndWinner |> should equal (Some(expectedAmount, expectedWinner))
+        
+    // Common test for getting winner with two bids
+    member this.GetWinnerWithTwoBids(expectedAmount: Amount, expectedWinner: UserId) =
+        let state1, _ = stateHandler.AddBid bid1 emptyState
+        let state2, _ = stateHandler.AddBid bid2 state1
+        let stateEndedAfterTwoBids = stateHandler.Inc sampleEndsAt state2
+        
+        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedAfterTwoBids
+        maybeAmountAndWinner |> should equal (Some(expectedAmount, expectedWinner))
+        
+    // Get state with two bids and ended
+    member this.GetStateWithTwoBidsAndEnded() =
+        let state1, _ = stateHandler.AddBid bid1 emptyState
+        let state2, _ = stateHandler.AddBid bid2 state1
+        stateHandler.Inc sampleEndsAt state2

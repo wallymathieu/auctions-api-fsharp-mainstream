@@ -38,21 +38,11 @@ type BlindAuctionTests() =
     [<Test>]
     member _.``Get winner and price from an ended auction - winner pays their own bid``() =
         // In Blind auction, the highest bidder wins and pays their own bid amount
-        let state1, _ = stateHandler.AddBid bid1 emptyBlindAuctionState
-        let state2, _ = stateHandler.AddBid bid2 state1  // bid2 is higher than bid1
-        let stateEndedAfterTwoBids = stateHandler.Inc sampleEndsAt state2
-        
-        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedAfterTwoBids
-        // Winner should be buyer2 (who placed bid2) and they pay their own bid amount
-        maybeAmountAndWinner |> should equal (Some(bidAmount2, buyer2.UserId))
+        fixture.GetWinnerWithTwoBids(bidAmount2, buyer2.UserId)
 
     [<Test>]
     member _.``Get winner and price from an ended auction with single bid``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyBlindAuctionState
-        let stateEndedAfterOneBid = stateHandler.Inc sampleEndsAt state1
-        
-        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedAfterOneBid
-        maybeAmountAndWinner |> should equal (Some(bidAmount1, buyer1.UserId))
+        fixture.GetWinnerWithSingleBid(bidAmount1, buyer1.UserId)
 
     [<Test>]
     member _.``No winner when no bids placed``() =

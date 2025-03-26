@@ -43,12 +43,7 @@ type EnglishAuctionTests() =
 
     [<Test>]
     member _.``Can get winner and price from an auction``() =
-        let state1, _ = stateHandler.AddBid bid1 emptyAscAuctionState
-        let state2, _ = stateHandler.AddBid bid2 state1
-        let stateEndedAfterTwoBids = stateHandler.Inc sampleEndsAt state2
-        
-        let maybeAmountAndWinner = stateHandler.TryGetAmountAndWinner stateEndedAfterTwoBids
-        maybeAmountAndWinner |> should equal (Some(bidAmount2, buyer2.UserId))
+        fixture.GetWinnerWithTwoBids(bidAmount2, buyer2.UserId)
 
     [<Test>]
     member _.``Cannot place bid lower than highest bid``() =
