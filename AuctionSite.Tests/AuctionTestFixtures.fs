@@ -3,11 +3,12 @@ module AuctionSite.Tests.AuctionTestFixtures
 open NUnit.Framework
 open FsUnit
 open AuctionSite.Domain
+open AuctionSite.Money
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
 
 // Common test fixture for all auction types
-type AuctionTestFixture<'T>(auctionType: AuctionType, stateHandler: IState<'T>) =
+type AuctionTestFixture<'T when 'T : equality>(auctionType: AuctionType, stateHandler: IState<'T>) =
     // Create an auction for testing
     let auction = sampleAuctionOfType auctionType
     let emptyState = 
