@@ -64,6 +64,8 @@ Authentication uses JWT tokens in the `x-jwt-payload` header. The payload should
 }
 ```
 
+Note that the x-jwt-payload header is a decoded JWT and not an actual JWT, since this app is supposed to be deployed behind a front-proxy or api gateway.
+
 ## Technical Decisions
 
 - **Functional Design**: The implementation follows a functional approach using F# discriminated unions and immutable data structures.
