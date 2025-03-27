@@ -25,7 +25,7 @@ The system supports the following auction types:
 
 ### Prerequisites
 
-- .NET SDK 6.0 or higher
+- .NET SDK 9.0 or higher
 
 ### Building the Project
 
