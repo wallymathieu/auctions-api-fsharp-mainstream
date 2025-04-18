@@ -40,19 +40,18 @@ module TimedAscending =
         
     /// Parse TimedAscendingOptions from string
     let tryParseOptions (s: string) =
-        let parts = s.Split('|')
-        if parts.Length = 4 && parts[0] = "English" then
-            match tryParseAmount parts[1], tryParseAmount parts[2], Int32.TryParse parts[3] with
-            | Some reservePrice, Some minRaise, (true, seconds) ->
-                if reservePrice.Currency = minRaise.Currency then
-                    Some {
-                        ReservePrice = reservePrice
-                        MinRaise = minRaise
-                        TimeFrame = TimeSpan.FromSeconds(float seconds)
-                    }
-                else None
-            | _ -> None
-        else None
+        let parts = s.Split('|') |> List.ofArray
+        let (|Int32|) (str: string) = match Int32.TryParse str with | true, i -> Some i | _ -> None 
+        match parts with
+        | ["English"; Amount (Some reservePrice); Amount (Some minRaise); Int32 (Some seconds)]->
+            if reservePrice.Currency = minRaise.Currency then
+                Some {
+                    ReservePrice = reservePrice
+                    MinRaise = minRaise
+                    TimeFrame = TimeSpan.FromSeconds(float seconds)
+                }
+            else None
+        | _ -> None
         
     /// Convert TimedAscendingOptions to string
     let optionsToString (options: TimedAscendingOptions) =

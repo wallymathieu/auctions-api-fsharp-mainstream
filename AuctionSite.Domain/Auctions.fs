@@ -63,9 +63,13 @@ module Auction =
             InvalidBid(SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
         elif bid.BidAmount.Currency <> auction.AuctionCurrency then
             InvalidBid(CurrencyConversion auction.AuctionCurrency)
+        elif bid.At < auction.StartsAt then
+            InvalidBid(AuctionHasNotStarted auction.AuctionId)
+        elif bid.At > auction.Expiry then
+            InvalidBid(AuctionHasEnded auction.AuctionId)
         else
             ValidBid
-    
+
     /// Create an empty state for an auction
     let emptyState (auction: Auction) : AuctionState =
         match auction.Type with

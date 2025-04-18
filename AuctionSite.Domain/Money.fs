@@ -56,7 +56,7 @@ module Money =
             | Some currency -> Some { Value= Int64.Parse(v, CultureInfo.InvariantCulture); Currency= currency}
             | None -> None
         else None
-
+    let (|Amount|) = tryParseAmount
 open System.Text.Json.Serialization
 open System.Text.Json
 open Money
