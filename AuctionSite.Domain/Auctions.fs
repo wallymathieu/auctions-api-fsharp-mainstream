@@ -58,13 +58,13 @@ module Auction =
     }
     
     /// Validate a bid for an auction
-    let validateBid (bid: Bid) (auction: Auction) : Result<unit, Errors> =
+    let (|ValidBid|InvalidBid|) (auction: Auction, bid: Bid) =
         if bid.Bidder.UserId = auction.Seller.UserId then
-            Error(SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
+            InvalidBid(SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
         elif bid.BidAmount.Currency <> auction.AuctionCurrency then
-            Error(CurrencyConversion auction.AuctionCurrency)
+            InvalidBid(CurrencyConversion auction.AuctionCurrency)
         else
-            Ok()
+            ValidBid
     
     /// Create an empty state for an auction
     let emptyState (auction: Auction) : AuctionState =

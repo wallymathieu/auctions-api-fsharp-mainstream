@@ -55,8 +55,8 @@ module Repository =
             let auctionId = bid.ForAuction
             match Map.tryFind auctionId repository with
             | Some(auction, state) ->
-                match Auction.validateBid bid auction with
-                | Ok() ->
+                match auction,bid with
+                | Auction.ValidBid ->
                     let stateHandler = Auction.createStateHandler()
                     let nextState, bidResult = stateHandler.AddBid bid state
                     let nextRepository = Map.add auctionId (auction, nextState) repository
@@ -64,7 +64,7 @@ module Repository =
                     match bidResult with
                     | Ok() -> Ok(BidAccepted(time, bid)), nextRepository
                     | Error err -> Error err, repository
-                | Error err -> 
+                | Auction.InvalidBid err -> 
                     Error err, repository
             | None ->
                 Error(UnknownAuction auctionId), repository
