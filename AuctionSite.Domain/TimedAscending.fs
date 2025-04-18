@@ -43,7 +43,7 @@ module TimedAscending =
     let tryParseOptions (s: string) =
         let parts = s.Split('|') |> List.ofArray
         match parts with
-        | ["English"; Amount (Some reservePrice); Amount (Some minRaise); Int32 (Some seconds)]->
+        | ["English"; Amount reservePrice; Amount minRaise; Int32 seconds]->
             if reservePrice.Currency = minRaise.Currency then
                 Some {
                     ReservePrice = reservePrice

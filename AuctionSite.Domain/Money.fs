@@ -14,7 +14,7 @@ module Money =
             match Enum.TryParse<Currency>(s) with
             | false, _ -> None
             | true, v -> Some v
-    let (|Currency|) = Currency.tryParse
+    let (|Currency|_|) = Currency.tryParse
 
     /// Represents a monetary amount with a specific currency
     type Amount = { 
@@ -55,10 +55,10 @@ module Money =
             let currencyString = m.Groups["currency"].Value;
             let v = m.Groups["value"].Value
             match (currencyString,v) with
-            | Currency (Some currency), Int64 (Some value) -> Some { Value= value; Currency= currency}
+            | Currency currency, Int64 value -> Some { Value= value; Currency= currency}
             | _ -> None
         else None
-    let (|Amount|) = tryParseAmount
+    let (|Amount|_|) = tryParseAmount
 
 open System.Text.Json.Serialization
 open System.Text.Json
