@@ -1,7 +1,8 @@
 namespace AuctionSite
 open System
-open System.Globalization
 open System.Text.RegularExpressions
+open AuctionSite.Domain.Patterns
+
 module Money =
     /// Currency types supported by the system
     type Currency =
@@ -13,6 +14,7 @@ module Money =
             match Enum.TryParse<Currency>(s) with
             | false, _ -> None
             | true, v -> Some v
+    let (|Currency|) = Currency.tryParse
 
     /// Represents a monetary amount with a specific currency
     type Amount = { 
@@ -52,11 +54,12 @@ module Money =
         if m.Success then
             let currencyString = m.Groups["currency"].Value;
             let v = m.Groups["value"].Value
-            match Currency.tryParse(currencyString) with
-            | Some currency -> Some { Value= Int64.Parse(v, CultureInfo.InvariantCulture); Currency= currency}
-            | None -> None
+            match (currencyString,v) with
+            | Currency (Some currency), Int64 (Some value) -> Some { Value= value; Currency= currency}
+            | _ -> None
         else None
     let (|Amount|) = tryParseAmount
+
 open System.Text.Json.Serialization
 open System.Text.Json
 open Money

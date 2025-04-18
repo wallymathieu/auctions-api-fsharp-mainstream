@@ -2,6 +2,7 @@ namespace AuctionSite.Domain
 
 open System
 open AuctionSite.Money
+open AuctionSite.Domain.Patterns
 
 /// Options for TimedAscending (English) auctions
 type TimedAscendingOptions = {
@@ -41,7 +42,6 @@ module TimedAscending =
     /// Parse TimedAscendingOptions from string
     let tryParseOptions (s: string) =
         let parts = s.Split('|') |> List.ofArray
-        let (|Int32|) (str: string) = match Int32.TryParse str with | true, i -> Some i | _ -> None 
         match parts with
         | ["English"; Amount (Some reservePrice); Amount (Some minRaise); Int32 (Some seconds)]->
             if reservePrice.Currency = minRaise.Currency then

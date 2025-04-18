@@ -47,9 +47,9 @@ module Repository =
             if not (Map.containsKey auctionId repository) then
                 let emptyState = Auction.emptyState auction
                 let nextRepository = Map.add auctionId (auction, emptyState) repository
-                Ok(AuctionAdded(time, auction)), nextRepository
+                Ok (AuctionAdded(time, auction)), nextRepository
             else
-                Error(AuctionAlreadyExists auctionId), repository
+                Error (AuctionAlreadyExists auctionId), repository
                 
         | PlaceBid(time, bid) ->
             let auctionId = bid.ForAuction
@@ -62,10 +62,10 @@ module Repository =
                     let nextRepository = Map.add auctionId (auction, nextState) repository
                     
                     match bidResult with
-                    | Ok() -> Ok(BidAccepted(time, bid)), nextRepository
+                    | Ok() -> Ok (BidAccepted(time, bid)), nextRepository
                     | Error err -> Error err, repository
                 | Auction.InvalidBid err -> 
                     Error err, repository
             | None ->
-                Error(UnknownAuction auctionId), repository
+                Error (UnknownAuction auctionId), repository
 

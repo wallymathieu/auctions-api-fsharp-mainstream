@@ -60,13 +60,13 @@ module Auction =
     /// Validate a bid for an auction
     let (|ValidBid|InvalidBid|) (auction: Auction, bid: Bid) =
         if bid.Bidder.UserId = auction.Seller.UserId then
-            InvalidBid(SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
+            InvalidBid (SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
         elif bid.BidAmount.Currency <> auction.AuctionCurrency then
-            InvalidBid(CurrencyConversion auction.AuctionCurrency)
+            InvalidBid (CurrencyConversion auction.AuctionCurrency)
         elif bid.At < auction.StartsAt then
-            InvalidBid(AuctionHasNotStarted auction.AuctionId)
+            InvalidBid (AuctionHasNotStarted auction.AuctionId)
         elif bid.At > auction.Expiry then
-            InvalidBid(AuctionHasEnded auction.AuctionId)
+            InvalidBid (AuctionHasEnded auction.AuctionId)
         else
             ValidBid
 

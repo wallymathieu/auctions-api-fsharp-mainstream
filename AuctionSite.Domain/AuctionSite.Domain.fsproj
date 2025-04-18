@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Patterns.fs" />
     <Compile Include="Money.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="Bids.fs" />
