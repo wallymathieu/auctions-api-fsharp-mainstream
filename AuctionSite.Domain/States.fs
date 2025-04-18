@@ -20,10 +20,10 @@ type IState<'TState> =
     /// Check if the auction has ended
     abstract member HasEnded: 'TState -> bool
 
-/// Module containing functions for working with Either<'TLeft, 'TRight> state types
-module EitherState =
-    /// Create state wrapper for Either<'TLeft, 'TRight> where both types implement IState
-    let createEitherState<'TLeft, 'TRight, 'TLeftState, 'TRightState when 'TLeft :> IState<'TLeftState> and 'TRight :> IState<'TRightState>> 
+/// Module containing functions for working with Choice<'TLeft, 'TRight> state types
+module ChoiceState =
+    /// Create state wrapper for Choice<'TLeft, 'TRight> where both types implement IState
+    let createChoiceState<'TLeft, 'TRight, 'TLeftState, 'TRightState when 'TLeft :> IState<'TLeftState> and 'TRight :> IState<'TRightState>>
         (leftState: 'TLeft) (rightState: 'TRight) =
         
         let inc (time: DateTime) (state: Choice<'TLeftState, 'TRightState>) =

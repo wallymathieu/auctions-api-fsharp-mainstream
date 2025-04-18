@@ -80,6 +80,6 @@ module Auction =
             
     /// Create a state handler for an auction
     let createStateHandler () =
-        EitherState.createEitherState
+        ChoiceState.createChoiceState
             SingleSealedBid.stateHandler
             TimedAscending.stateHandler

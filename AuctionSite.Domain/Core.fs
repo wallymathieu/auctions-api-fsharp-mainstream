@@ -13,13 +13,13 @@ type User =
     /// Gets the user's ID
     member this.UserId =
         match this with
-        | BuyerOrSeller(id, _) -> id
-        | Support(id) -> id
+        | BuyerOrSeller (id, _) -> id
+        | Support id -> id
         
     override this.ToString() =
         match this with
         | BuyerOrSeller(id, name) -> $"BuyerOrSeller|%s{id}|%s{name}"
-        | Support(id) -> $"Support|%s{id}"
+        | Support id -> $"Support|%s{id}"
 
 /// Functions for working with User objects
 module User =
