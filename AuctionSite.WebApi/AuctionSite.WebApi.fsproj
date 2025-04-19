@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Result.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Jwt.fs" />
     <Compile Include="App.fs" />

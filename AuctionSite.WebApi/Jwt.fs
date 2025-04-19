@@ -19,16 +19,16 @@ module Jwt =
     }
     
     /// Convert a JWT user to a domain user
-    let toUser (jwtUser: JwtUser) : Result<User, Errors> =
+    let (|User|InvalidUser|) (jwtUser: JwtUser) =
         match jwtUser.UTyp with
         | "0" -> 
             match jwtUser.Name with
-            | Some name -> Ok(BuyerOrSeller(jwtUser.Sub, name))
-            | None -> Error(InvalidUserData "Missing name for BuyerOrSeller")
+            | Some name -> User(BuyerOrSeller(jwtUser.Sub, name))
+            | None -> InvalidUser(InvalidUserData "Missing name for BuyerOrSeller")
         | "1" -> 
-            Ok(Support(jwtUser.Sub))
+            User(Support(jwtUser.Sub))
         | _ -> 
-            Error(InvalidUserData "Invalid user type")
+            InvalidUser(InvalidUserData "Invalid user type")
     
     /// Decode base64 string
     let decodeBase64 (base64: string) : Result<string, string> =
@@ -49,10 +49,9 @@ module Jwt =
     
     /// Decode a JWT payload header value to a domain User
     let decodeJwtUser (jwtPayload: string) : Result<User, string> =
-        result {
-            let! decoded = decodeBase64 jwtPayload
-            let! jwtUser = parseJwtPayload decoded
-            match toUser jwtUser with
-            | Ok user -> return user
-            | Error err -> return! Error $"Invalid user data: %A{err}"
-        }
+        decodeBase64 jwtPayload 
+        |> Result.map parseJwtPayload
+        |> Result.bind (function
+            | Ok (User user) -> Ok user
+            | Ok (InvalidUser err) -> Error $"Invalid user data: %A{err}"
+            | Error err -> Error $"Invalid user data: %A{err}")
