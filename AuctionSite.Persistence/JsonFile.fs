@@ -12,19 +12,16 @@ module JsonFile =
         if not (File.Exists path) then
             return None
         else
-            try
-                let! content = File.ReadAllLinesAsync(path) |> Async.AwaitTask
-                let items = 
-                    content 
-                    |> Array.choose (fun line -> 
-                        try 
-                            Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
-                        with
-                        | _ -> None)
-                    |> Array.toList
-                return Some items
-            with
-            | _ -> return None
+            let! content = File.ReadAllLinesAsync(path) |> Async.AwaitTask
+            let items = 
+                content 
+                |> Array.choose (fun line -> 
+                    try 
+                        Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
+                    with
+                    | _ -> None)
+                |> Array.toList
+            return Some items
     }
     
     /// Generic write function for any JSON-encodable type
