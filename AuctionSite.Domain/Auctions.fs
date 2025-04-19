@@ -11,11 +11,11 @@ type AuctionType =
     
     override this.ToString() =
         match this with
-        | TimedAscending opts -> TimedAscending.optionsToString opts
-        | SingleSealedBid opts -> opts.ToString()
+        | TimedAscending opts -> string opts
+        | SingleSealedBid opts -> string opts
         
     static member TryParse(s: string) =
-        match TimedAscending.tryParseOptions s with
+        match TimedAscendingOptions.TryParse s with
         | Some opts -> Some(TimedAscending opts)
         | None -> 
             match SingleSealedBidOptions.TryParse s with

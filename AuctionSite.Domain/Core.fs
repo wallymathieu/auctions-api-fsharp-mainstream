@@ -21,16 +21,15 @@ type User =
         | BuyerOrSeller(id, name) -> $"BuyerOrSeller|%s{id}|%s{name}"
         | Support id -> $"Support|%s{id}"
 
-/// Functions for working with User objects
-module User =
     /// Try to parse a user from string representation
-    let tryParse (s: string) =
+    static member TryParse (s: string) =
         let parts = s.Split('|')
         match parts with
         | [| "BuyerOrSeller"; id; name |] -> Some(BuyerOrSeller(id, name))
         | [| "Support"; id |] -> Some(Support(id))
         | _ -> None
-        
+/// Functions for working with User objects
+module User =
     /// Gets the user ID from a User object
     let userId (user: User) = user.UserId
 
@@ -65,6 +64,6 @@ type UserJsonConverter() =
     /// Deserialize a User object from JSON
     override _.Read(reader: byref<Utf8JsonReader>, _: Type, _: JsonSerializerOptions) =
         let userString = reader.GetString()
-        match User.tryParse userString with
+        match User.TryParse userString with
         | Some user -> user
         | None -> failwith $"Invalid user format: %s{userString}"

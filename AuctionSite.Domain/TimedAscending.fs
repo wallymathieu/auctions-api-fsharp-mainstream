@@ -14,8 +14,24 @@ type TimedAscendingOptions = {
     
     /// Time frame after which the auction ends if no new bids are placed.
     TimeFrame: TimeSpan
-}
-
+} with
+    /// Convert TimedAscendingOptions to string
+    override options.ToString () =
+        let seconds = int options.TimeFrame.TotalSeconds
+        $"English|%s{string options.ReservePrice}|%s{string options.MinRaise}|%d{seconds}"
+    /// Parse TimedAscendingOptions from string
+    static member TryParse (s: string) =
+        let parts = s.Split('|') |> List.ofArray
+        match parts with
+        | ["English"; Amount reservePrice; Amount minRaise; Int32 seconds]->
+            if reservePrice.Currency = minRaise.Currency then
+                Some {
+                    ReservePrice = reservePrice
+                    MinRaise = minRaise
+                    TimeFrame = TimeSpan.FromSeconds(float seconds)
+                }
+            else None
+        | _ -> None
 /// State for TimedAscending auctions
 type TimedAscendingState =
     /// The auction hasn't started yet
@@ -38,25 +54,6 @@ module TimedAscending =
     /// Create an empty state for a TimedAscending auction
     let emptyState (startsAt: DateTime) (expiry: DateTime) (options: TimedAscendingOptions) : TimedAscendingState =
         AwaitingStart(startsAt, expiry, options)
-        
-    /// Parse TimedAscendingOptions from string
-    let tryParseOptions (s: string) =
-        let parts = s.Split('|') |> List.ofArray
-        match parts with
-        | ["English"; Amount reservePrice; Amount minRaise; Int32 seconds]->
-            if reservePrice.Currency = minRaise.Currency then
-                Some {
-                    ReservePrice = reservePrice
-                    MinRaise = minRaise
-                    TimeFrame = TimeSpan.FromSeconds(float seconds)
-                }
-            else None
-        | _ -> None
-        
-    /// Convert TimedAscendingOptions to string
-    let optionsToString (options: TimedAscendingOptions) =
-        let seconds = int options.TimeFrame.TotalSeconds
-        $"English|%s{string options.ReservePrice}|%s{string options.MinRaise}|%d{seconds}"
     
     /// Implementation of the IState interface for TimedAscendingState
     let rec stateHandler =

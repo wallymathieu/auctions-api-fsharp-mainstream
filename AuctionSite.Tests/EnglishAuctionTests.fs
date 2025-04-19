@@ -78,7 +78,7 @@ type EnglishAuctionTests() =
         let sampleTypStr = "English|VAC0|VAC0|0"
         let sampleTyp = TimedAscending.defaultOptions Currency.VAC
         
-        let parsed = TimedAscending.tryParseOptions sampleTypStr
+        let parsed = TimedAscendingOptions.TryParse sampleTypStr
         parsed |> should equal (Some sampleTyp)
 
     [<Test>]
@@ -86,7 +86,7 @@ type EnglishAuctionTests() =
         let sampleTyp = TimedAscending.defaultOptions Currency.VAC
         let sampleTypStr = "English|VAC0|VAC0|0"
         
-        let serialized = TimedAscending.optionsToString sampleTyp
+        let serialized = string sampleTyp
         serialized |> should equal sampleTypStr
 
     [<Test>]
@@ -98,7 +98,7 @@ type EnglishAuctionTests() =
             TimeFrame = TimeSpan.FromSeconds(30.0)
         }
         
-        let parsed = TimedAscending.tryParseOptions sampleWithValuesTypStr
+        let parsed = TimedAscendingOptions.TryParse sampleWithValuesTypStr
         parsed |> should equal (Some sampleWithValuesTyp)
 
     [<Test>]
@@ -110,7 +110,7 @@ type EnglishAuctionTests() =
         }
         let sampleWithValuesTypStr = "English|VAC10|VAC20|30"
         
-        let serialized = TimedAscending.optionsToString sampleWithValuesTyp
+        let serialized = string sampleWithValuesTyp
         serialized |> should equal sampleWithValuesTypStr
 
 [<TestFixture>]
