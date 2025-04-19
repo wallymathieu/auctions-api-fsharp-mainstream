@@ -31,27 +31,30 @@ module Jwt =
             InvalidUser(InvalidUserData "Invalid user type")
     
     /// Decode base64 string
-    let decodeBase64 (base64: string) : Result<string, string> =
+    let decodeBase64 (base64: string) : Option<string> =
         try
             let bytes = Convert.FromBase64String(base64)
             let decodedString = Encoding.UTF8.GetString(bytes)
-            Ok decodedString
-        with
-        | ex -> Error ex.Message
+            Some decodedString
+        with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
+        | ex -> None
     
     /// Parse JWT payload to JwtUser
-    let parseJwtPayload (jsonPayload: string) : Result<JwtUser, string> =
+    /// Here we 
+    let parseJwtPayload (jsonPayload: string) : Option<JwtUser> =
         try
             let jwtUser = JsonSerializer.Deserialize<JwtUser>(jsonPayload, Serialization.serializerOptions())
-            Ok jwtUser
-        with
-        | ex -> Error ex.Message
+            Some jwtUser
+        with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
+        | ex -> None
     
     /// Decode a JWT payload header value to a domain User
-    let decodeJwtUser (jwtPayload: string) : Result<User, string> =
+    /// Note that we are returning extra information that we typically do not want to include for unauthorized attackers.
+    /// This could be used in logging, but should not be returned to the user.
+    let decodeJwtUser (jwtPayload: string) : Result<User, Errors> =
         decodeBase64 jwtPayload 
-        |> Result.map parseJwtPayload
-        |> Result.bind (function
-            | Ok (User user) -> Ok user
-            | Ok (InvalidUser err) -> Error $"Invalid user data: %A{err}"
-            | Error err -> Error $"Invalid user data: %A{err}")
+        |> Option.bind parseJwtPayload
+        |> function
+            | Some (User user) -> Ok user
+            | Some (InvalidUser err) -> Error err
+            | None -> Error (InvalidUserData "Unable to interpret payload")
