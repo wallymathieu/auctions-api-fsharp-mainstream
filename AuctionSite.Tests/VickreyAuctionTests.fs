@@ -5,13 +5,13 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
+// Create a Vickrey auction for testing
+let vickreyAuction = sampleAuctionOfType (SingleSealedBid Vickrey)
+let emptyVickreyAuctionState = Auction.emptyState vickreyAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
+let stateHandler = SingleSealedBid.stateHandler
 
 [<TestFixture>]
 type VickreyAuctionTests() =
-    // Create a Vickrey auction for testing
-    let vickreyAuction = sampleAuctionOfType (SingleSealedBid Vickrey)
-    let emptyVickreyAuctionState = Auction.emptyState vickreyAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
-    let stateHandler = SingleSealedBid.stateHandler
 
     [<Test>]
     member _.``Can add bid to empty state``() =
@@ -50,17 +50,6 @@ type VickreyAuctionTests() =
         match result with
         | Ok result -> Assert.Fail (string result)
         | Error err -> err |> should equal (AuctionHasEnded sampleAuctionId)
-
-    [<Test>]
-    member _.``Increment state tests``() =
-        // Get the increment spec test methods
-        let tests = incrementSpec emptyVickreyAuctionState stateHandler
-        
-        tests.CanIncrementTwice()
-        tests.WontEndJustAfterStart()
-        tests.WontEndJustBeforeEnd()
-        tests.WontEndJustBeforeStart()
-        tests.WillHaveEndedJustAfterEnd()
 
     [<Test>]
     member _.``Get winner and price from an ended auction - winner pays second highest bid``() =
@@ -110,3 +99,7 @@ type VickreyAuctionTests() =
     member _.``Can serialize Blind options to string``() =
         let serialized = Blind.ToString()
         serialized |> should equal "Blind"
+
+[<TestFixture>]
+type VickreyAuctionStateTests() =
+    inherit IncrementSpec<SingleSealedBidState>(emptyVickreyAuctionState, stateHandler)

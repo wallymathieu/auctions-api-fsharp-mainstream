@@ -6,12 +6,14 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Money
 open AuctionSite.Tests.SampleData
+open AuctionStateTests
+
+let timedAscAuction = sampleAuctionOfType (TimedAscending (TimedAscending.defaultOptions Currency.SEK))
+let emptyAscAuctionState = Auction.emptyState timedAscAuction  |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
+let stateHandler = TimedAscending.stateHandler
 
 [<TestFixture>]
 type EnglishAuctionTests() =
-    let timedAscAuction = sampleAuctionOfType (TimedAscending (TimedAscending.defaultOptions Currency.SEK))
-    let emptyAscAuctionState = Auction.emptyState timedAscAuction  |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
-    let stateHandler = TimedAscending.stateHandler
 
     [<Test>]
     member _.``Can add bid to empty state``() =
@@ -110,3 +112,7 @@ type EnglishAuctionTests() =
         
         let serialized = TimedAscending.optionsToString sampleWithValuesTyp
         serialized |> should equal sampleWithValuesTypStr
+
+[<TestFixture>]
+type TimedAscendingAuctionStateTests() =
+    inherit IncrementSpec<TimedAscendingState>(emptyAscAuctionState, stateHandler)

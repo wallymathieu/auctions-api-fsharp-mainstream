@@ -5,14 +5,13 @@ open FsUnit
 open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
 open AuctionSite.Tests.AuctionStateTests
+// Create a Blind auction for testing
+let blindAuction = sampleAuctionOfType (SingleSealedBid Blind)
+let emptyBlindAuctionState = Auction.emptyState blindAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
+let stateHandler = SingleSealedBid.stateHandler
 
 [<TestFixture>]
 type BlindAuctionTests() =
-    // Create a Blind auction for testing
-    let blindAuction = sampleAuctionOfType (SingleSealedBid Blind)
-    let emptyBlindAuctionState = Auction.emptyState blindAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
-    let stateHandler = SingleSealedBid.stateHandler
-
     [<Test>]
     member _.``Can add bid to empty state``() =
         let _, result1 = stateHandler.AddBid bid1 emptyBlindAuctionState
@@ -78,17 +77,6 @@ type BlindAuctionTests() =
         | Error err -> err |> should equal (AuctionHasEnded sampleAuctionId)
 
     [<Test>]
-    member _.``Increment state tests``() =
-        // Get the increment spec test methods
-        let tests = incrementSpec emptyBlindAuctionState stateHandler
-        
-        tests.CanIncrementTwice()
-        tests.WontEndJustAfterStart()
-        tests.WontEndJustBeforeEnd()
-        tests.WontEndJustBeforeStart()
-        tests.WillHaveEndedJustAfterEnd()
-
-    [<Test>]
     member _.``Bids are sorted by amount in descending order when ended``() =
         // Create bids with different amounts
         let lowBid = { bid1 with BidAmount = sek 5L }
@@ -116,3 +104,7 @@ type BlindAuctionTests() =
             bids[1].BidAmount |> should equal (sek 10L)
             bids[2].BidAmount |> should equal (sek 5L)
         | _ -> Assert.Fail("Expected DisclosingBids state")
+
+[<TestFixture>]
+type BlindAuctionStateTests() =
+    inherit IncrementSpec<SingleSealedBidState>(emptyBlindAuctionState, stateHandler)
