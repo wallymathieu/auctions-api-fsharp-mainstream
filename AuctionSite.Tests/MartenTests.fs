@@ -61,7 +61,7 @@ let martenTests =
             let auctionId = Guid.NewGuid().ToString()
             let userId = Guid.NewGuid().ToString()
             let commands = [
-                Commands.createAuction {
+                Command.CreateAuction {
                     AuctionId = auctionId
                     Title = "Test Auction"
                     Description = "Test Description"
@@ -84,11 +84,11 @@ let martenTests =
             | Some readCommands ->
                 Expect.isNonEmpty readCommands "Should have read commands"
                 let cmd = readCommands |> List.find (function
-                    | Commands.CreateAuction c when c.AuctionId = auctionId -> true
+                    | Command.CreateAuction c when c.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match cmd with
-                | Commands.CreateAuction c ->
+                | Command.CreateAuction c ->
                     Expect.equal c.Title "Test Auction" "Title should match"
                     Expect.equal c.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong command type"
@@ -108,7 +108,7 @@ let martenTests =
             let auctionId = Guid.NewGuid().ToString()
             let userId = Guid.NewGuid().ToString()
             let events = [
-                Events.auctionCreated {
+                Event.AuctionCreated {
                     AuctionId = auctionId
                     Title = "Test Auction"
                     Description = "Test Description"
@@ -132,11 +132,11 @@ let martenTests =
             | Some readEvents ->
                 Expect.isNonEmpty readEvents "Should have read events"
                 let evt = readEvents |> List.find (function
-                    | Events.AuctionCreated e when e.AuctionId = auctionId -> true
+                    | Event.AuctionCreated e when e.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match evt with
-                | Events.AuctionCreated e ->
+                | Event.AuctionCreated e ->
                     Expect.equal e.Title "Test Auction" "Title should match"
                     Expect.equal e.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong event type"
