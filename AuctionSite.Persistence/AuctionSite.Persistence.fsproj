@@ -7,10 +7,16 @@
 
   <ItemGroup>
     <Compile Include="JsonFile.fs" />
+    <Compile Include="Marten.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AuctionSite.Domain\AuctionSite.Domain.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Marten" Version="7.40.0" />
+    <PackageReference Include="Npgsql" Version="8.0.2" />
   </ItemGroup>
 
 </Project>
