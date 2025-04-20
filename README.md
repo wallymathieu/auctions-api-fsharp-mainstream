@@ -36,7 +36,7 @@ dotnet build
 ### Running the Tests
 
 ```bash
-dotnet test
+dotnet run --project AuctionSite.Tests
 ```
 
 ### Running the Web API
