@@ -12,6 +12,7 @@ let timedAscAuction = sampleAuctionOfType (TimedAscending (TimedAscending.defaul
 let emptyAscAuctionState = Auction.emptyState timedAscAuction  |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
 let stateHandler = TimedAscending.stateHandler
 
+[<Tests>]
 let englishAuctionTests = testList "English Auction Tests" [
     test "Can add bid to empty state" {
         let _, result1 = stateHandler.AddBid bid1 emptyAscAuctionState
@@ -112,4 +113,5 @@ let englishAuctionTests = testList "English Auction Tests" [
     }
 ]
 
+[<Tests>]
 let timedAscendingStateTests = incrementSpec "TimedAscending State Tests" emptyAscAuctionState stateHandler

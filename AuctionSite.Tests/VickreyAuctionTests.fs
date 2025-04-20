@@ -11,6 +11,7 @@ let vickreyAuction = sampleAuctionOfType (SingleSealedBid Vickrey)
 let emptyVickreyAuctionState = Auction.emptyState vickreyAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
 let stateHandler = SingleSealedBid.stateHandler
 
+[<Tests>]
 let vickreyAuctionTests = testList "Vickrey Auction Tests" [
     test "Can add bid to empty state" {
         let _, result1 = stateHandler.AddBid bid1 emptyVickreyAuctionState
@@ -100,4 +101,5 @@ let vickreyAuctionTests = testList "Vickrey Auction Tests" [
     }
 ]
 
+[<Tests>]
 let vickreyAuctionStateTests = incrementSpec "Vickrey Auction State Tests" emptyVickreyAuctionState stateHandler

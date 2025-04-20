@@ -75,6 +75,7 @@ let createTestServer(testEvents: Event ResizeArray) =
     new TestServer(hostBuilder)
 
 // API tests
+[<Tests>]
 let apiTests = testList "API Tests" [
     testAsync "Can add auction" {
         let testEvents = ResizeArray<Event>()

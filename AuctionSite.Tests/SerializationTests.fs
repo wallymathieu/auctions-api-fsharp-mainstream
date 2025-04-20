@@ -50,6 +50,7 @@ let setupSampleFiles() =
         ]
         File.WriteAllLines(sampleCommandsFile, commands)
 
+[<Tests>]
 let serializationTests = testList "Serialization Tests" [
     testList "Serialization" [
         test "Can deserialize AuctionType" {
