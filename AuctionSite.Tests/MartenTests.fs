@@ -58,20 +58,22 @@ let martenTests =
             use store = createDocumentStore config
             
             // Create some test commands
-            let auctionId = Guid.NewGuid().ToString()
-            let userId = Guid.NewGuid().ToString()
+            let auctionId = Guid.Parse("00000000-0000-0000-0000-000000000001").ToString()
+            let userId = "user-123"
+            let now = DateTime.UtcNow
+            let auction = {
+                AuctionId = auctionId
+                Title = "Test Auction"
+                Description = "Test Description"
+                StartingPrice = Money.create "USD" 100.0m
+                ReservePrice = Some (Money.create "USD" 200.0m)
+                AuctionType = AuctionType.TimedAscending
+                StartDate = now
+                EndDate = now.AddDays(7.0)
+                CreatedBy = userId
+            }
             let commands = [
-                Command.CreateAuction {
-                    AuctionId = auctionId
-                    Title = "Test Auction"
-                    Description = "Test Description"
-                    StartingPrice = Money.create "USD" 100.0m
-                    ReservePrice = Some (Money.create "USD" 200.0m)
-                    AuctionType = AuctionType.TimedAscending
-                    StartDate = DateTime.UtcNow
-                    EndDate = DateTime.UtcNow.AddDays(7.0)
-                    CreatedBy = userId
-                }
+                Command.AddAuction(now, auction)
             ]
             
             // Write commands
@@ -84,13 +86,13 @@ let martenTests =
             | Some readCommands ->
                 Expect.isNonEmpty readCommands "Should have read commands"
                 let cmd = readCommands |> List.find (function
-                    | Command.CreateAuction c when c.AuctionId = auctionId -> true
+                    | Command.AddAuction(_, auction) when auction.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match cmd with
-                | Command.CreateAuction c ->
-                    Expect.equal c.Title "Test Auction" "Title should match"
-                    Expect.equal c.CreatedBy userId "User ID should match"
+                | Command.AddAuction(_, auction) ->
+                    Expect.equal auction.Title "Test Auction" "Title should match"
+                    Expect.equal auction.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong command type"
             | None -> failwith "Expected to read commands"
             
@@ -105,21 +107,22 @@ let martenTests =
             use store = createDocumentStore config
             
             // Create some test events
-            let auctionId = Guid.NewGuid().ToString()
-            let userId = Guid.NewGuid().ToString()
+            let auctionId = Guid.Parse("00000000-0000-0000-0000-000000000002").ToString()
+            let userId = "user-456"
+            let now = DateTime.UtcNow
+            let auction = {
+                AuctionId = auctionId
+                Title = "Test Auction"
+                Description = "Test Description"
+                StartingPrice = Money.create "USD" 100.0m
+                ReservePrice = Some (Money.create "USD" 200.0m)
+                AuctionType = AuctionType.TimedAscending
+                StartDate = now
+                EndDate = now.AddDays(7.0)
+                CreatedBy = userId
+            }
             let events = [
-                Event.AuctionCreated {
-                    AuctionId = auctionId
-                    Title = "Test Auction"
-                    Description = "Test Description"
-                    StartingPrice = Money.create "USD" 100.0m
-                    ReservePrice = Some (Money.create "USD" 200.0m)
-                    AuctionType = AuctionType.TimedAscending
-                    StartDate = DateTime.UtcNow
-                    EndDate = DateTime.UtcNow.AddDays(7.0)
-                    CreatedBy = userId
-                    CreatedAt = DateTime.UtcNow
-                }
+                Event.AuctionAdded(now, auction)
             ]
             
             // Write events
@@ -132,13 +135,13 @@ let martenTests =
             | Some readEvents ->
                 Expect.isNonEmpty readEvents "Should have read events"
                 let evt = readEvents |> List.find (function
-                    | Event.AuctionCreated e when e.AuctionId = auctionId -> true
+                    | Event.AuctionAdded(_, auction) when auction.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match evt with
-                | Event.AuctionCreated e ->
-                    Expect.equal e.Title "Test Auction" "Title should match"
-                    Expect.equal e.CreatedBy userId "User ID should match"
+                | Event.AuctionAdded(_, auction) ->
+                    Expect.equal auction.Title "Test Auction" "Title should match"
+                    Expect.equal auction.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong event type"
             | None -> failwith "Expected to read events"
             
