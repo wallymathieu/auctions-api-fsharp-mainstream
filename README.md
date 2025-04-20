@@ -72,7 +72,7 @@ Note that the x-jwt-payload header is a decoded JWT and not an actual JWT, since
 - **Railway-Oriented Programming**: Error handling uses the Result type with a custom computation expression for elegant error handling pipelines.
 - **Web Framework**: Giraffe is used as a functional-first web framework built on ASP.NET Core.
 - **Serialization**: System.Text.Json is used for JSON serialization.
-- **Testing**: NUnit and FsUnit are used for testing.
+- **Testing**: Expecto is used for testing.
 
 ## Original Implementation
 
