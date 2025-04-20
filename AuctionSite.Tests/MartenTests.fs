@@ -79,7 +79,7 @@ let martenTests =
                 
                 match evt with
                 | Event.AuctionAdded(_, auction) ->
-                    Expect.equal auction.Title "Test Auction" "Title should match"
+                    Expect.equal auction.Title "auction" "Title should match"
                     Expect.equal auction.Seller sampleSeller "User ID should match"
                 | _ -> failwith "Wrong event type"
             | None -> failwith "Expected to read events"

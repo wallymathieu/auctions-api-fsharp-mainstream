@@ -7,6 +7,11 @@ open Marten.Events
 open Weasel.Core
 open AuctionSite.Domain
 
+type MartenEvent = {
+    Id: Guid
+    Data: Event
+}
+
 /// Module for Marten document store persistence
 module MartenDb =
     
@@ -35,24 +40,25 @@ module MartenDb =
             options.AutoCreateSchemaObjects <- AutoCreate.All
             
             // Register serialization for domain types
-            options.RegisterDocumentType<Event>()
+            options.RegisterDocumentType<MartenEvent>()
         )
         store    
+
 
     /// Read events from Marten
     let readEvents (store: IDocumentStore) : Async<Event list option> = async {
         use session = store.OpenSession()
-        let! events = session.Query<Event>().ToListAsync() |> Async.AwaitTask
+        let! events = session.Query<MartenEvent>().ToListAsync() |> Async.AwaitTask
         return 
             if events.Count = 0 then None
-            else Some (events |> Seq.toList)
+            else Some (events |> Seq.map _.Data |> Seq.toList)
     }
     
     /// Write events to Marten
     let writeEvents (store: IDocumentStore) (events: Event list) : Async<unit> = async {
         use session = store.OpenSession()
         for event in events do
-            session.Store(event)
+            session.Store { Id = Guid.NewGuid(); Data= event }
         do! session.SaveChangesAsync() |> Async.AwaitTask
     }
     
