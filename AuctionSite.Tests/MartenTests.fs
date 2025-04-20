@@ -15,7 +15,7 @@ open AuctionSite.Persistence.MartenDb
 /// Helper to create a PostgreSQL container for testing
 let createPostgresContainer() =
     let postgresBuilder = 
-        new PostgreSqlBuilder()
+        (new PostgreSqlBuilder())
             .WithImage("postgres:16")
             .WithPortBinding(5432, true)
             .WithDatabase("auction_test")
