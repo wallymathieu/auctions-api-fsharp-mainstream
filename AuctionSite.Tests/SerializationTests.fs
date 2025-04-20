@@ -88,7 +88,7 @@ let serializationTests = testList "Serialization Tests" [
     ]
     
     testList "File Operations" [
-        setup (fun _ -> setupSampleFiles())
+        beforeEach (fun _ -> setupSampleFiles(); Task.CompletedTask)
         
         testAsync "Can read commands from JSON file" {
             let! commandsResult = readCommands sampleCommandsFile
@@ -96,7 +96,7 @@ let serializationTests = testList "Serialization Tests" [
             commandsResult |> Expect.isSome "Should be able to read commands"
             match commandsResult with
             | Some commands ->
-                Expect.isGreaterThan commands.Length 0 "Should have at least one command"
+                commands.Length |> Expect.isGreaterThan "Should have at least one command" 0
             | None -> 
                 failtest "Failed to read commands"
         }
