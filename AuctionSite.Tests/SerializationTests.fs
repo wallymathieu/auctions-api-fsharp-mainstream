@@ -96,7 +96,7 @@ let serializationTests = testList "Serialization Tests" [
             commandsResult |> Expect.isSome "Should be able to read commands"
             match commandsResult with
             | Some commands ->
-                Expect.isTrue (commands.Length > 0) "Should have at least one command"
+                Expect.isTrue "Should have at least one command" (commands.Length > 0)
             | None -> 
                 failtest "Failed to read commands"
         }

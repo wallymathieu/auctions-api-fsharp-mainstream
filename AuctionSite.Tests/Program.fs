@@ -18,6 +18,4 @@ module Tests =
 
 [<EntryPoint>]
 let main args =
-    Tests.allTests
-    |> runTests defaultConfig
-    |> exit
+    runTestsWithArgs defaultConfig args Tests.allTests
