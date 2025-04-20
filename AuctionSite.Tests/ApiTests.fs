@@ -50,21 +50,18 @@ module Helpers =
         return deserialize<'T> content
     }
 
-// Mock event handler for testing
-let mutable testEvents: Event list = []
-let onEvent (event: Event) = 
-    task {
-        testEvents <- event :: testEvents
-        return ()
-    }
 
 // Fixed time provider for tests
 let getCurrentTime() = DateTime.Parse("2018-08-04T00:00:00Z")
 
 // Create a test server for API tests
-let createTestServer() =
-    // Clear events from previous tests
-    testEvents <- []
+let createTestServer(testEvents: Event ResizeArray) =
+    // Mock event handler for testing
+    let onEvent (event: Event) = 
+        task {
+            testEvents.Add event
+            return ()
+        }
     
     // Initialize server
     let repository: Repository = Map.empty
@@ -80,7 +77,9 @@ let createTestServer() =
 // API tests
 let apiTests = testList "API Tests" [
     test "Can add auction" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        let server = createTestServer(testEvents)
+        use server = server
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -90,9 +89,9 @@ let apiTests = testList "API Tests" [
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-        testEvents.Length |> Expect.equal "Should have one event" 1
+        testEvents.Count |> Expect.equal "Should have one event" 1
         
-        match testEvents with
+        match testEvents |> List.ofSeq with
         | [AuctionAdded(_, auction)] ->
             auction.AuctionId |> Expect.equal "Auction ID should be 1" 1L
             auction.Title |> Expect.equal "Auction title should match" "First auction"
@@ -101,7 +100,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Can get auctions after adding one" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -122,7 +122,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Can get auction by ID after adding one" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -143,7 +144,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Can place bid on auction" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
@@ -156,10 +158,10 @@ let apiTests = testList "API Tests" [
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-        testEvents.Length |> Expect.equal "Should have two events" 2  // One for auction add, one for bid
+        testEvents.Count |> Expect.equal "Should have two events" 2  // One for auction add, one for bid
         
         // Check events
-        match testEvents with
+        match testEvents |> List.ofSeq with
         | [BidAccepted(_, bid); AuctionAdded _] ->
             bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
             bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
@@ -175,7 +177,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Seller cannot bid on own auction" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         
@@ -187,11 +190,12 @@ let apiTests = testList "API Tests" [
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
-        testEvents.Length |> Expect.equal "Should have only one event" 1  // Only the auction add event
+        testEvents.Count |> Expect.equal "Should have only one event" 1  // Only the auction add event
     }
 
     test "Unauthorized request is rejected" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let client = server.CreateClient()  // No JWT header
         
@@ -203,7 +207,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Cannot bid on non-existent auction" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
         
@@ -215,7 +220,8 @@ let apiTests = testList "API Tests" [
     }
 
     test "Cannot add same auction twice" {
-        use server = createTestServer()
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
