@@ -12,6 +12,15 @@ open AuctionSite.Domain
 
 /// Application state
 type AppState = {
+    /// NOTE: This is overly simplistic and not thread safe.
+    /// You could look into thread lock, actors or use a message queue for updates.
+    /// Using thread lock to synchronize state is not recommended in a web server 
+    /// context since we cannot assume that there will only be one server instance.
+    /// </br>
+    /// In order to use actors in a web scenario, you would need a distributed actor framework.
+    /// </br>
+    /// In a real-world application, you could use a database with row versions and throw an error
+    /// if there are conflicting writes.
     mutable Auctions: Repository
 }
 
