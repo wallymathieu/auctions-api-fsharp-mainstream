@@ -88,9 +88,8 @@ let serializationTests = testList "Serialization Tests" [
     ]
     
     testList "File Operations" [
-        testCase "Setup" (fun _ -> setupSampleFiles())
-        
         testAsync "Can read commands from JSON file" {
+            setupSampleFiles()
             let! commandsResult = readCommands sampleCommandsFile
             
             commandsResult |> Expect.isSome "Should be able to read commands"
@@ -102,6 +101,7 @@ let serializationTests = testList "Serialization Tests" [
         }
             
         testAsync "Can write and read commands" {
+            setupSampleFiles()
             // Get sample commands
             let! commandsOption = readCommands sampleCommandsFile
             let commands = 
@@ -130,6 +130,7 @@ let serializationTests = testList "Serialization Tests" [
         }
         
         testAsync "Can read and write events" {
+            setupSampleFiles()
             // Create sample events
             let events = [
                 AuctionAdded(sampleStartsAt, sampleAuction)
