@@ -162,11 +162,11 @@ let apiTests = testList "API Tests" [
         
         // Check events
         match testEvents |> List.ofSeq with
-        | [BidAccepted(_, bid); AuctionAdded _] ->
+        | [AuctionAdded _; BidAccepted(_, bid)] ->
             bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
             bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
         | _ -> 
-            failtest "Expected BidAccepted event"
+            failtestf "Expected BidAccepted event %A" testEvents
             
         // Check that the bid is visible in the auction
         let! auctionResponse = buyerClient.GetAsync("/auction/1") |> Async.AwaitTask
