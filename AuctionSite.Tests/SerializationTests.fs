@@ -51,7 +51,7 @@ let setupSampleFiles() =
         File.WriteAllLines(sampleCommandsFile, commands)
 
 let serializationTests = testList "Serialization Tests" [
-    testFixture setupSampleFiles [
+    testList "Serialization" [
         test "Can deserialize AuctionType" {
             let json = "\"English|VAC0|VAC0|0\""
             let deserializedOption = 
@@ -84,6 +84,11 @@ let serializationTests = testList "Serialization Tests" [
             
             deserialized |> Expect.equal "Deserialized auction type should match original" (Some auctionType)
         }
+        
+    ]
+    
+    testList "File Operations" [
+        testSetup setupSampleFiles
         
         testAsync "Can read commands from JSON file" {
             let! commandsResult = readCommands sampleCommandsFile
