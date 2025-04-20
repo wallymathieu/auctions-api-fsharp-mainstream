@@ -7,6 +7,7 @@ open DotNet.Testcontainers
 open DotNet.Testcontainers.Containers
 open DotNet.Testcontainers.Builders
 open DotNet.Testcontainers.Configurations
+open Testcontainers.PostgreSql
 open AuctionSite.Domain
 open AuctionSite.Persistence
 open AuctionSite.Persistence.MartenDb
@@ -14,7 +15,7 @@ open AuctionSite.Persistence.MartenDb
 /// Helper to create a PostgreSQL container for testing
 let createPostgresContainer() =
     let postgresBuilder = 
-        PostgreSqlBuilder()
+        new PostgreSqlBuilder()
             .WithImage("postgres:16")
             .WithPortBinding(5432, true)
             .WithDatabase("auction_test")
@@ -60,7 +61,7 @@ let martenTests =
             let auctionId = Guid.NewGuid().ToString()
             let userId = Guid.NewGuid().ToString()
             let commands = [
-                Command.CreateAuction {
+                Commands.createAuction {
                     AuctionId = auctionId
                     Title = "Test Auction"
                     Description = "Test Description"
@@ -83,11 +84,11 @@ let martenTests =
             | Some readCommands ->
                 Expect.isNonEmpty readCommands "Should have read commands"
                 let cmd = readCommands |> List.find (function
-                    | Command.CreateAuction c when c.AuctionId = auctionId -> true
+                    | Commands.CreateAuction c when c.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match cmd with
-                | Command.CreateAuction c ->
+                | Commands.CreateAuction c ->
                     Expect.equal c.Title "Test Auction" "Title should match"
                     Expect.equal c.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong command type"
@@ -107,7 +108,7 @@ let martenTests =
             let auctionId = Guid.NewGuid().ToString()
             let userId = Guid.NewGuid().ToString()
             let events = [
-                Event.AuctionCreated {
+                Events.auctionCreated {
                     AuctionId = auctionId
                     Title = "Test Auction"
                     Description = "Test Description"
@@ -131,11 +132,11 @@ let martenTests =
             | Some readEvents ->
                 Expect.isNonEmpty readEvents "Should have read events"
                 let evt = readEvents |> List.find (function
-                    | Event.AuctionCreated e when e.AuctionId = auctionId -> true
+                    | Events.AuctionCreated e when e.AuctionId = auctionId -> true
                     | _ -> false)
                 
                 match evt with
-                | Event.AuctionCreated e ->
+                | Events.AuctionCreated e ->
                     Expect.equal e.Title "Test Auction" "Title should match"
                     Expect.equal e.CreatedBy userId "User ID should match"
                 | _ -> failwith "Wrong event type"
