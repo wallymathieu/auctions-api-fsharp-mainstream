@@ -11,8 +11,8 @@ open AuctionSite.Tests.SampleData
 open AuctionSite.Persistence.JsonFile
 
 // Test setup and helper functions
-let tmpSampleCommands = "./tmp/test-sample-commands.jsonl"
-let sampleCommandsFile = "./test-samples/sample-commands.jsonl"
+let tmpSampleCommands = "./.tmp/test-sample-commands.jsonl"
+let sampleCommandsFile = "./.tmp/test-samples/sample-commands.jsonl"
 
 let vac0 = createAmount Currency.VAC 0L
 let timedAscending = TimedAscending { 
@@ -26,12 +26,12 @@ let bid = PlaceBid(sampleBidTime, bid1)
 
 // Helper function to set up the temp directory for tests
 let setupTempDirectory() =
-    let dir = Path.GetDirectoryName(tmpSampleCommands)
+    let dir = Path.GetDirectoryName tmpSampleCommands
     if not (Directory.Exists(dir)) then
         Directory.CreateDirectory(dir) |> ignore
         
-    if File.Exists(tmpSampleCommands) then
-        File.Delete(tmpSampleCommands)
+    if File.Exists tmpSampleCommands then
+        File.Delete tmpSampleCommands
 
 // Helper function to set up sample files
 let setupSampleFiles() =

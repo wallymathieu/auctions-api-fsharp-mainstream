@@ -80,177 +80,153 @@ let createTestServer() =
 // API tests
 let apiTests = testList "API Tests" [
     test "Can add auction" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
+        use server = createTestServer()
+        // Arrange
+        let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
 
-            // Act
-            let response = client.PostAsync("/auction", content).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-            testEvents.Length |> Expect.equal "Should have one event" 1
-            
-            match testEvents with
-            | [AuctionAdded(_, auction)] ->
-                auction.AuctionId |> Expect.equal "Auction ID should be 1" 1L
-                auction.Title |> Expect.equal "Auction title should match" "First auction"
-            | _ -> 
-                failtest "Expected AuctionAdded event"
-        finally
-            server.Dispose()
+        // Act
+        let response = client.PostAsync("/auction", content).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        testEvents.Length |> Expect.equal "Should have one event" 1
+        
+        match testEvents with
+        | [AuctionAdded(_, auction)] ->
+            auction.AuctionId |> Expect.equal "Auction ID should be 1" 1L
+            auction.Title |> Expect.equal "Auction title should match" "First auction"
+        | _ -> 
+            failtest "Expected AuctionAdded event"
     }
 
     test "Can get auctions after adding one" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
-            
-            // Add an auction first
-            let _ = client.PostAsync("/auction", content).Result
-            
-            // Act
-            let response = client.GetAsync("/auctions").Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-            let auctions = Helpers.readJsonContent<AuctionListItemResponse list>(response).Result
-            
-            auctions.Length |> Expect.equal "Should have one auction" 1
-            auctions[0].Id |> Expect.equal "Auction ID should be 1" 1L
-            auctions[0].Title |> Expect.equal "Auction title should match" "First auction"
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
+        
+        // Add an auction first
+        let _ = client.PostAsync("/auction", content).Result
+        
+        // Act
+        let response = client.GetAsync("/auctions").Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        let auctions = Helpers.readJsonContent<AuctionListItemResponse list>(response).Result
+        
+        auctions.Length |> Expect.equal "Should have one auction" 1
+        auctions[0].Id |> Expect.equal "Auction ID should be 1" 1L
+        auctions[0].Title |> Expect.equal "Auction title should match" "First auction"
     }
 
     test "Can get auction by ID after adding one" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
-            
-            // Add an auction first
-            let _ = client.PostAsync("/auction", content).Result
-            
-            // Act
-            let response = client.GetAsync("/auction/1").Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-            let auction = Helpers.readJsonContent<AuctionDetailResponse>(response).Result
-            
-            auction.Id |> Expect.equal "Auction ID should be 1" 1L
-            auction.Title |> Expect.equal "Auction title should match" "First auction"
-            auction.Bids.Length |> Expect.equal "Should have no bids" 0
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
+        
+        // Add an auction first
+        let _ = client.PostAsync("/auction", content).Result
+        
+        // Act
+        let response = client.GetAsync("/auction/1").Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        let auction = Helpers.readJsonContent<AuctionDetailResponse>(response).Result
+        
+        auction.Id |> Expect.equal "Auction ID should be 1" 1L
+        auction.Title |> Expect.equal "Auction title should match" "First auction"
+        auction.Bids.Length |> Expect.equal "Should have no bids" 0
     }
 
     test "Can place bid on auction" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
+        use server = createTestServer()
+        // Arrange
+        let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
+        
+        // Add an auction first
+        let _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
+        
+        // Act - place a bid
+        let response = buyerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        testEvents.Length |> Expect.equal "Should have two events" 2  // One for auction add, one for bid
+        
+        // Check events
+        match testEvents with
+        | [BidAccepted(_, bid); AuctionAdded _] ->
+            bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
+            bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
+        | _ -> 
+            failtest "Expected BidAccepted event"
             
-            // Add an auction first
-            let _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
-            
-            // Act - place a bid
-            let response = buyerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
-            testEvents.Length |> Expect.equal "Should have two events" 2  // One for auction add, one for bid
-            
-            // Check events
-            match testEvents with
-            | [BidAccepted(_, bid); AuctionAdded _] ->
-                bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
-                bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
-            | _ -> 
-                failtest "Expected BidAccepted event"
-                
-            // Check that the bid is visible in the auction
-            let auctionResponse = buyerClient.GetAsync("/auction/1").Result
-            let auction = Helpers.readJsonContent<AuctionDetailResponse>(auctionResponse).Result
-            
-            auction.Bids.Length |> Expect.equal "Should have one bid" 1
-            auction.Bids[0].Amount |> Expect.equal "Bid amount should be VAC11" "VAC11"
-        finally
-            server.Dispose()
+        // Check that the bid is visible in the auction
+        let auctionResponse = buyerClient.GetAsync("/auction/1").Result
+        let auction = Helpers.readJsonContent<AuctionDetailResponse>(auctionResponse).Result
+        
+        auction.Bids.Length |> Expect.equal "Should have one bid" 1
+        auction.Bids[0].Amount |> Expect.equal "Bid amount should be VAC11" "VAC11"
     }
 
     test "Seller cannot bid on own auction" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            
-            // Add an auction first
-            let _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
-            
-            // Act - seller tries to bid on own auction
-            let response = sellerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
-            testEvents.Length |> Expect.equal "Should have only one event" 1  // Only the auction add event
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        
+        // Add an auction first
+        let _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
+        
+        // Act - seller tries to bid on own auction
+        let response = sellerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
+        testEvents.Length |> Expect.equal "Should have only one event" 1  // Only the auction add event
     }
 
     test "Unauthorized request is rejected" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let client = server.CreateClient()  // No JWT header
-            
-            // Act
-            let response = client.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be Unauthorized" HttpStatusCode.Unauthorized
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let client = server.CreateClient()  // No JWT header
+        
+        // Act
+        let response = client.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be Unauthorized" HttpStatusCode.Unauthorized
     }
 
     test "Cannot bid on non-existent auction" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
-            
-            // Act - try to bid on auction that doesn't exist
-            let response = buyerClient.PostAsync("/auction/999/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be NotFound" HttpStatusCode.NotFound
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
+        
+        // Act - try to bid on auction that doesn't exist
+        let response = buyerClient.PostAsync("/auction/999/bid", Helpers.createJsonStringContent Helpers.bidJson).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be NotFound" HttpStatusCode.NotFound
     }
 
     test "Cannot add same auction twice" {
-        let server = createTestServer()
-        try
-            // Arrange
-            let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
-            let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
-            
-            // Add auction first time
-            let _ = client.PostAsync("/auction", content).Result
-            
-            // Act - try to add same auction again
-            let response = client.PostAsync("/auction", content).Result
-            
-            // Assert
-            response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
-        finally
-            server.Dispose()
+        use server = createTestServer()
+        // Arrange
+        let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
+        
+        // Add auction first time
+        let _ = client.PostAsync("/auction", content).Result
+        
+        // Act - try to add same auction again
+        let response = client.PostAsync("/auction", content).Result
+        
+        // Assert
+        response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
     }
 ]
