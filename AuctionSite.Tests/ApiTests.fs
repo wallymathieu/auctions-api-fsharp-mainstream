@@ -6,8 +6,8 @@ open System.Net.Http
 open System.Text
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.TestHost
-open NUnit.Framework
-open FsUnit
+open Expecto
+open Expecto.Flip
 open AuctionSite.Domain
 open AuctionSite.WebApi
 open System.Text.Json
@@ -61,37 +61,26 @@ let onEvent (event: Event) =
 // Fixed time provider for tests
 let getCurrentTime() = DateTime.Parse("2018-08-04T00:00:00Z")
 
-// Test fixture for API tests
-[<TestFixture>]
-type ApiTests() =
-    let mutable server: TestServer = null
-    let mutable repository: Repository = Map.empty
+// Create a test server for API tests
+let createTestServer() =
+    // Clear events from previous tests
+    testEvents <- []
+    
+    // Initialize server
+    let repository: Repository = Map.empty
+    let appState = AppStateInit.initAppState repository
+    
+    let hostBuilder = WebHostBuilder()
+                        .ConfigureServices(Handler.configureServices) 
+                        .Configure(fun app -> 
+                            Handler.configureApp app appState onEvent getCurrentTime)
+    
+    new TestServer(hostBuilder)
 
-    // Set up test server
-    [<SetUp>]
-    member _.Setup() =
-        // Clear events from previous tests
-        testEvents <- []
-        
-        // Initialize server
-        let appState = AppStateInit.initAppState repository
-        
-        let hostBuilder = WebHostBuilder()
-                            .ConfigureServices(Handler.configureServices) 
-                            .Configure(fun app -> 
-                                Handler.configureApp app appState onEvent getCurrentTime)
-        
-        server <- new TestServer(hostBuilder)
-
-    // Tear down test server
-    [<TearDown>]
-    member _.TearDown() =
-        if server <> null then
-            server.Dispose()
-
-    // Test adding an auction
-    [<Test>]
-    member _.``Can add auction``() = task {
+// API tests
+let apiTests = testList "API Tests" [
+    testTask "Can add auction" {
+        use server = createTestServer()
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -100,20 +89,19 @@ type ApiTests() =
         let! response = client.PostAsync("/auction", content)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.OK
-        testEvents.Length |> should equal 1
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        testEvents.Length |> Expect.equal "Should have one event" 1
         
         match testEvents with
         | [AuctionAdded(_, auction)] ->
-            auction.AuctionId |> should equal 1L
-            auction.Title |> should equal "First auction"
+            auction.AuctionId |> Expect.equal "Auction ID should be 1" 1L
+            auction.Title |> Expect.equal "Auction title should match" "First auction"
         | _ -> 
-            Assert.Fail("Expected AuctionAdded event")
+            failtest "Expected AuctionAdded event"
     }
 
-    // Test getting auctions
-    [<Test>]
-    member _.``Can get auctions after adding one``() = task {
+    testTask "Can get auctions after adding one" {
+        use server = createTestServer()
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -125,17 +113,16 @@ type ApiTests() =
         let! response = client.GetAsync("/auctions")
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.OK
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
         let! auctions = Helpers.readJsonContent<AuctionListItemResponse list> response
         
-        auctions.Length |> should equal 1
-        auctions[0].Id |> should equal 1L
-        auctions[0].Title |> should equal "First auction"
+        auctions.Length |> Expect.equal "Should have one auction" 1
+        auctions[0].Id |> Expect.equal "Auction ID should be 1" 1L
+        auctions[0].Title |> Expect.equal "Auction title should match" "First auction"
     }
 
-    // Test getting auction by ID
-    [<Test>]
-    member _.``Can get auction by ID after adding one``() = task {
+    testTask "Can get auction by ID after adding one" {
+        use server = createTestServer()
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -147,17 +134,16 @@ type ApiTests() =
         let! response = client.GetAsync("/auction/1")
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.OK
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
         let! auction = Helpers.readJsonContent<AuctionDetailResponse> response
         
-        auction.Id |> should equal 1L
-        auction.Title |> should equal "First auction"
-        auction.Bids.Length |> should equal 0
+        auction.Id |> Expect.equal "Auction ID should be 1" 1L
+        auction.Title |> Expect.equal "Auction title should match" "First auction"
+        auction.Bids.Length |> Expect.equal "Should have no bids" 0
     }
 
-    // Test placing a bid
-    [<Test>]
-    member _.``Can place bid on auction``() = task {
+    testTask "Can place bid on auction" {
+        use server = createTestServer()
         // Arrange
         let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
@@ -169,28 +155,27 @@ type ApiTests() =
         let! response = buyerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.OK
-        testEvents.Length |> should equal 2  // One for auction add, one for bid
+        response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
+        testEvents.Length |> Expect.equal "Should have two events" 2  // One for auction add, one for bid
         
         // Check events
         match testEvents with
         | [BidAccepted(_, bid); AuctionAdded _] ->
-            bid.ForAuction |> should equal 1L
-            bid.BidAmount |> should equal (createAmount Currency.VAC 11L)
+            bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
+            bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
         | _ -> 
-            Assert.Fail("Expected BidAccepted event")
+            failtest "Expected BidAccepted event"
             
         // Check that the bid is visible in the auction
         let! auctionResponse = buyerClient.GetAsync("/auction/1")
         let! auction = Helpers.readJsonContent<AuctionDetailResponse> auctionResponse
         
-        auction.Bids.Length |> should equal 1
-        auction.Bids[0].Amount |> should equal "VAC11"
+        auction.Bids.Length |> Expect.equal "Should have one bid" 1
+        auction.Bids[0].Amount |> Expect.equal "Bid amount should be VAC11" "VAC11"
     }
 
-    // Test seller cannot bid on own auction
-    [<Test>]
-    member _.``Seller cannot bid on own auction``() = task {
+    testTask "Seller cannot bid on own auction" {
+        use server = createTestServer()
         // Arrange
         let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         
@@ -201,13 +186,12 @@ type ApiTests() =
         let! response = sellerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.BadRequest
-        testEvents.Length |> should equal 1  // Only the auction add event
+        response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
+        testEvents.Length |> Expect.equal "Should have only one event" 1  // Only the auction add event
     }
 
-    // Test unauthorized access
-    [<Test>]
-    member _.``Unauthorized request is rejected``() = task {
+    testTask "Unauthorized request is rejected" {
+        use server = createTestServer()
         // Arrange
         let client = server.CreateClient()  // No JWT header
         
@@ -215,12 +199,11 @@ type ApiTests() =
         let! response = client.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.Unauthorized
+        response.StatusCode |> Expect.equal "Status code should be Unauthorized" HttpStatusCode.Unauthorized
     }
 
-    // Test bid on non-existent auction
-    [<Test>]
-    member _.``Cannot bid on non-existent auction``() = task {
+    testTask "Cannot bid on non-existent auction" {
+        use server = createTestServer()
         // Arrange
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
         
@@ -228,12 +211,11 @@ type ApiTests() =
         let! response = buyerClient.PostAsync("/auction/999/bid", Helpers.createJsonStringContent Helpers.bidJson)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.NotFound
+        response.StatusCode |> Expect.equal "Status code should be NotFound" HttpStatusCode.NotFound
     }
 
-    // Test adding duplicate auction
-    [<Test>]
-    member _.``Cannot add same auction twice``() = task {
+    testTask "Cannot add same auction twice" {
+        use server = createTestServer()
         // Arrange
         let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
@@ -245,5 +227,6 @@ type ApiTests() =
         let! response = client.PostAsync("/auction", content)
         
         // Assert
-        response.StatusCode |> should equal HttpStatusCode.BadRequest
+        response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
     }
+]

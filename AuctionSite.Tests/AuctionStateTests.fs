@@ -1,35 +1,36 @@
 module AuctionSite.Tests.AuctionStateTests
 
-open FsUnit
+open Expecto
+open Expecto.Flip
 open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
-open NUnit.Framework
 
 // Base tests for auction states that can be reused in specific auction type tests
-type IncrementSpec<'T when 'T : equality> (baseState: 'T, stateHandler: IState<'T>) =
-    
-    [<Test>]
-    member _.canIncrementTwice() =
-        let s = stateHandler.Inc sampleBidTime baseState
-        let s2 = stateHandler.Inc sampleBidTime s
-        s |> should equal s2
+let incrementSpec<'T when 'T : equality> (name: string) (baseState: 'T) (stateHandler: IState<'T>) =
+    testList name [
+        test "can increment twice" {
+            let s = stateHandler.Inc sampleBidTime baseState
+            let s2 = stateHandler.Inc sampleBidTime s
+            s |> Expect.equal "States should be equal after incrementing twice" s2
+        }
         
-    [<Test>]
-    member _.wontEndJustAfterStart() =
-        let state = stateHandler.Inc (sampleStartsAt.AddSeconds(1.0)) baseState
-        stateHandler.HasEnded state |> should equal false
+        test "won't end just after start" {
+            let state = stateHandler.Inc (sampleStartsAt.AddSeconds(1.0)) baseState
+            stateHandler.HasEnded state |> Expect.isFalse "Auction should not have ended just after start"
+        }
         
-    [<Test>]
-    member _.wontEndJustBeforeEnd() =
-        let state = stateHandler.Inc (sampleEndsAt.AddSeconds(-1.0)) baseState
-        stateHandler.HasEnded state |> should equal false
+        test "won't end just before end" {
+            let state = stateHandler.Inc (sampleEndsAt.AddSeconds(-1.0)) baseState
+            stateHandler.HasEnded state |> Expect.isFalse "Auction should not have ended just before end"
+        }
         
-    [<Test>]
-    member _.wontEndJustBeforeStart() =
-        let state = stateHandler.Inc (sampleStartsAt.AddSeconds(-1.0)) baseState
-        stateHandler.HasEnded state |> should equal false
+        test "won't end just before start" {
+            let state = stateHandler.Inc (sampleStartsAt.AddSeconds(-1.0)) baseState
+            stateHandler.HasEnded state |> Expect.isFalse "Auction should not have ended just before start"
+        }
         
-    [<Test>]
-    member _.willHaveEndedJustAfterEnd() =
-        let state = stateHandler.Inc (sampleEndsAt.AddSeconds(1.0)) baseState
-        stateHandler.HasEnded state |> should equal true
+        test "will have ended just after end" {
+            let state = stateHandler.Inc (sampleEndsAt.AddSeconds(1.0)) baseState
+            stateHandler.HasEnded state |> Expect.isTrue "Auction should have ended just after end"
+        }
+    ]
