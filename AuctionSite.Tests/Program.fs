@@ -18,4 +18,6 @@ module Tests =
 
 [<EntryPoint>]
 let main args =
-    runTestsWithCLIArgs defaultConfig args Tests.allTests
+    Tests.allTests
+    |> runTests defaultConfig
+    |> exit
