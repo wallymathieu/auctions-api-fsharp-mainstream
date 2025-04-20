@@ -11,6 +11,7 @@ let blindAuction = sampleAuctionOfType (SingleSealedBid Blind)
 let emptyBlindAuctionState = Auction.emptyState blindAuction |> function | Choice1Of2 s -> s | _ -> failwith "Expected SingleSealedBid state"
 let stateHandler = SingleSealedBid.stateHandler
 
+[<Tests>]
 let blindAuctionTests = testList "Blind Auction Tests" [
     test "Can add bid to empty state" {
         let _, result1 = stateHandler.AddBid bid1 emptyBlindAuctionState
@@ -106,4 +107,5 @@ let blindAuctionTests = testList "Blind Auction Tests" [
     }
 ]
 
+[<Tests>]
 let blindAuctionStateTests = incrementSpec "Blind Auction State Tests" emptyBlindAuctionState stateHandler

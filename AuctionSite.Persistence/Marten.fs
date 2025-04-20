@@ -35,28 +35,10 @@ module MartenDb =
             options.AutoCreateSchemaObjects <- AutoCreate.All
             
             // Register serialization for domain types
-            options.RegisterDocumentType<Command>()
             options.RegisterDocumentType<Event>()
         )
-        store
-    
-    /// Read commands from Marten
-    let readCommands (store: IDocumentStore) : Async<Command list option> = async {
-        use session = store.OpenSession()
-        let! commands = session.Query<Command>().ToListAsync() |> Async.AwaitTask
-        return 
-            if commands.Count = 0 then None
-            else Some (commands |> Seq.toList)
-    }
-    
-    /// Write commands to Marten
-    let writeCommands (store: IDocumentStore) (commands: Command list) : Async<unit> = async {
-        use session = store.OpenSession()
-        for command in commands do
-            session.Store(command)
-        do! session.SaveChangesAsync() |> Async.AwaitTask
-    }
-    
+        store    
+
     /// Read events from Marten
     let readEvents (store: IDocumentStore) : Async<Event list option> = async {
         use session = store.OpenSession()

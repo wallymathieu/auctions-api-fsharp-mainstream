@@ -14,6 +14,7 @@ module Tests =
             AuctionSite.Tests.BlindAuctionTests.blindAuctionStateTests
             AuctionSite.Tests.SerializationTests.serializationTests
             AuctionSite.Tests.ApiTests.apiTests
+            AuctionSite.Tests.MartenTests.martenTests
         ]
 
 [<EntryPoint>]

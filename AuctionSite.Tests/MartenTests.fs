@@ -11,6 +11,7 @@ open Testcontainers.PostgreSql
 open AuctionSite.Domain
 open AuctionSite.Persistence
 open AuctionSite.Persistence.MartenDb
+open SampleData
 
 /// Helper to create a PostgreSQL container for testing
 let createPostgresContainer() =
@@ -50,55 +51,6 @@ let martenTests =
             do! container.StopAsync()
         }
         
-        testTask "Can write and read commands" {
-            use container = createPostgresContainer()
-            do! container.StartAsync()
-            
-            let config = createTestConfig container
-            use store = createDocumentStore config
-            
-            // Create some test commands
-            let auctionId = Guid.Parse("00000000-0000-0000-0000-000000000001").ToString()
-            let userId = "user-123"
-            let now = DateTime.UtcNow
-            let auction = {
-                AuctionId = auctionId
-                Title = "Test Auction"
-                Description = "Test Description"
-                StartingPrice = Money.create "USD" 100.0m
-                ReservePrice = Some (Money.create "USD" 200.0m)
-                AuctionType = AuctionType.TimedAscending
-                StartDate = now
-                EndDate = now.AddDays(7.0)
-                CreatedBy = userId
-            }
-            let commands = [
-                Command.AddAuction(now, auction)
-            ]
-            
-            // Write commands
-            do! writeCommands store commands
-            
-            // Read commands back
-            let! readResult = readCommands store
-            
-            match readResult with
-            | Some readCommands ->
-                Expect.isNonEmpty readCommands "Should have read commands"
-                let cmd = readCommands |> List.find (function
-                    | Command.AddAuction(_, auction) when auction.AuctionId = auctionId -> true
-                    | _ -> false)
-                
-                match cmd with
-                | Command.AddAuction(_, auction) ->
-                    Expect.equal auction.Title "Test Auction" "Title should match"
-                    Expect.equal auction.CreatedBy userId "User ID should match"
-                | _ -> failwith "Wrong command type"
-            | None -> failwith "Expected to read commands"
-            
-            do! container.StopAsync()
-        }
-        
         testTask "Can write and read events" {
             use container = createPostgresContainer()
             do! container.StartAsync()
@@ -107,22 +59,9 @@ let martenTests =
             use store = createDocumentStore config
             
             // Create some test events
-            let auctionId = Guid.Parse("00000000-0000-0000-0000-000000000002").ToString()
-            let userId = "user-456"
-            let now = DateTime.UtcNow
-            let auction = {
-                AuctionId = auctionId
-                Title = "Test Auction"
-                Description = "Test Description"
-                StartingPrice = Money.create "USD" 100.0m
-                ReservePrice = Some (Money.create "USD" 200.0m)
-                AuctionType = AuctionType.TimedAscending
-                StartDate = now
-                EndDate = now.AddDays(7.0)
-                CreatedBy = userId
-            }
             let events = [
-                Event.AuctionAdded(now, auction)
+                AuctionAdded(sampleStartsAt, sampleAuction)
+                BidAccepted(sampleBidTime, bid1)
             ]
             
             // Write events
@@ -135,13 +74,13 @@ let martenTests =
             | Some readEvents ->
                 Expect.isNonEmpty readEvents "Should have read events"
                 let evt = readEvents |> List.find (function
-                    | Event.AuctionAdded(_, auction) when auction.AuctionId = auctionId -> true
+                    | Event.AuctionAdded(_, auction) when auction.AuctionId = sampleAuctionId -> true
                     | _ -> false)
                 
                 match evt with
                 | Event.AuctionAdded(_, auction) ->
                     Expect.equal auction.Title "Test Auction" "Title should match"
-                    Expect.equal auction.CreatedBy userId "User ID should match"
+                    Expect.equal auction.Seller sampleSeller "User ID should match"
                 | _ -> failwith "Wrong event type"
             | None -> failwith "Expected to read events"
             
