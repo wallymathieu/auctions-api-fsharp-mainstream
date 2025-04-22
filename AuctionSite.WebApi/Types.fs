@@ -18,7 +18,7 @@ type BidRequest = {
 /// Request for adding an auction
 type AddAuctionRequest = {
     [<JsonPropertyName("id")>]
-    Id: AuctionId
+    Id: AuctionId Option
     [<JsonPropertyName("startsAt")>]
     StartsAt: DateTime
     [<JsonPropertyName("title")>]
@@ -108,7 +108,7 @@ module RequestConverters =
     }
     
     /// Convert an auction request to a domain auction
-    let toAuction (req: AddAuctionRequest) (seller: User) : Auction =
+    let toAuction (req: AddAuctionRequest) nextId (seller: User) : Auction =
         let currency = defaultArg req.Currency Currency.VAC
         let auctionType = 
             match req.Type with
@@ -120,7 +120,7 @@ module RequestConverters =
                 TimedAscending (TimedAscending.defaultOptions currency)
                 
         {
-            AuctionId = req.Id
+            AuctionId = Option.defaultWith nextId req.Id
             StartsAt = req.StartsAt
             Title = req.Title
             Expiry = req.EndsAt

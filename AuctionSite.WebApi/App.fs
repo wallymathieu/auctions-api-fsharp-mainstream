@@ -125,9 +125,12 @@ module Handler =
                         task {
                             let now = getCurrentTime()
                             let repository = appState.Auctions
-                            
+                            let nextId () : AuctionId = 
+                                let count = appState.Auctions |> Map.count
+                                count |> int64
+                                |> (+) 1L
                             // Create auction
-                            let auction = RequestConverters.toAuction auctionReq user
+                            let auction = RequestConverters.toAuction auctionReq nextId user
                             let command = AddAuction(now, auction)
                             
                             // Process command
