@@ -48,9 +48,9 @@ dotnet run --project AuctionSite.WebApi
 The server will start on http://localhost:8080 with the following endpoints:
 
 - `GET /auctions` - Get all auctions
-- `GET /auction/{id}` - Get auction by ID
-- `POST /auction` - Create a new auction (requires authentication)
-- `POST /auction/{id}/bid` - Place a bid on an auction (requires authentication)
+- `GET /auctions/{id}` - Get auction by ID
+- `POST /auctions` - Create a new auction (requires authentication)
+- `POST /auctions/{id}/bids` - Place a bid on an auction (requires authentication)
 
 ## Authentication
 

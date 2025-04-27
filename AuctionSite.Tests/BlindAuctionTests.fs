@@ -79,13 +79,13 @@ let blindAuctionTests = testList "Blind Auction Tests" [
 
     test "Bids are sorted by amount in descending order when ended" {
         // Create bids with different amounts
-        let lowBid = { bid1 with BidAmount = sek 5L }
-        let midBid = { bid2 with BidAmount = sek 10L }
+        let lowBid = { bid1 with BidAmount = 5L }
+        let midBid = { bid2 with BidAmount = 10L }
         let highBid = { 
             ForAuction = sampleAuctionId
             Bidder = buyer3
             At = sampleStartsAt.AddSeconds(3.0)
-            BidAmount = sek 15L 
+            BidAmount = 15L
         }
         
         // Add bids in random order
@@ -100,9 +100,9 @@ let blindAuctionTests = testList "Blind Auction Tests" [
         match endedState with
         | DisclosingBids(bids, _, _) ->
             bids.Length |> Expect.equal "Should have 3 bids" 3
-            bids[0].BidAmount |> Expect.equal "Highest bid should be 15 SEK" (sek 15L)
-            bids[1].BidAmount |> Expect.equal "Middle bid should be 10 SEK" (sek 10L)
-            bids[2].BidAmount |> Expect.equal "Lowest bid should be 5 SEK" (sek 5L)
+            bids[0].BidAmount |> Expect.equal "Highest bid should be 15 SEK" 15L
+            bids[1].BidAmount |> Expect.equal "Middle bid should be 10 SEK" 10L
+            bids[2].BidAmount |> Expect.equal "Lowest bid should be 5 SEK" 5L
         | _ -> failtest "Expected DisclosingBids state"
     }
 ]

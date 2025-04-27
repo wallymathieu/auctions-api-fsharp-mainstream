@@ -86,7 +86,7 @@ let apiTests = testList "API Tests" [
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
 
         // Act
-        let! response = client.PostAsync("/auction", content) |> Async.AwaitTask
+        let! response = client.PostAsync("/auctions", content) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
@@ -108,10 +108,10 @@ let apiTests = testList "API Tests" [
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
         
         // Add an auction first
-        let! _ = client.PostAsync("/auction", content) |> Async.AwaitTask
+        let! _ = client.PostAsync("/auctions", content) |> Async.AwaitTask
         
         // Act
-        let! response = client.GetAsync("/auctions") |> Async.AwaitTask
+        let! response = client.GetAsync "/auctions" |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
@@ -130,10 +130,10 @@ let apiTests = testList "API Tests" [
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
         
         // Add an auction first
-        let! _ = client.PostAsync("/auction", content) |> Async.AwaitTask
+        let! _ = client.PostAsync("/auctions", content) |> Async.AwaitTask
         
         // Act
-        let! response = client.GetAsync("/auction/1") |> Async.AwaitTask
+        let! response = client.GetAsync "/auctions/1" |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
@@ -152,10 +152,10 @@ let apiTests = testList "API Tests" [
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
         
         // Add an auction first
-        let! _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
+        let! _ = sellerClient.PostAsync("/auctions", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
         
         // Act - place a bid
-        let! response = buyerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
+        let! response = buyerClient.PostAsync("/auctions/1/bids", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be OK" HttpStatusCode.OK
@@ -165,16 +165,16 @@ let apiTests = testList "API Tests" [
         match testEvents |> List.ofSeq with
         | [AuctionAdded _; BidAccepted(_, bid)] ->
             bid.ForAuction |> Expect.equal "Bid should be for auction 1" 1L
-            bid.BidAmount |> Expect.equal "Bid amount should be VAC11" (createAmount Currency.VAC 11L)
+            bid.BidAmount |> Expect.equal "Bid amount should be 11" 11L
         | _ -> 
             failtestf "Expected BidAccepted event %A" testEvents
             
         // Check that the bid is visible in the auction
-        let! auctionResponse = buyerClient.GetAsync("/auction/1") |> Async.AwaitTask
+        let! auctionResponse = buyerClient.GetAsync("/auctions/1") |> Async.AwaitTask
         let! auction = Helpers.readJsonContent<AuctionDetailResponse>(auctionResponse) |> Async.AwaitTask
         
         auction.Bids.Length |> Expect.equal "Should have one bid" 1
-        auction.Bids[0].Amount |> Expect.equal "Bid amount should be VAC11" "VAC11"
+        auction.Bids[0].Amount |> Expect.equal "Bid amount should be 11" 11
     }
 
     testAsync "Seller cannot bid on own auction" {
@@ -184,10 +184,10 @@ let apiTests = testList "API Tests" [
         let sellerClient = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
         
         // Add an auction first
-        let! _ = sellerClient.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
+        let! _ = sellerClient.PostAsync("/auctions", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
         
         // Act - seller tries to bid on own auction
-        let! response = sellerClient.PostAsync("/auction/1/bid", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
+        let! response = sellerClient.PostAsync("/auctions/1/bids", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
@@ -201,7 +201,7 @@ let apiTests = testList "API Tests" [
         let client = server.CreateClient()  // No JWT header
         
         // Act
-        let! response = client.PostAsync("/auction", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
+        let! response = client.PostAsync("/auctions", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be Unauthorized" HttpStatusCode.Unauthorized
@@ -214,7 +214,7 @@ let apiTests = testList "API Tests" [
         let buyerClient = Helpers.getClientWithJwt server Helpers.buyerJwtPayload
         
         // Act - try to bid on auction that doesn't exist
-        let! response = buyerClient.PostAsync("/auction/999/bid", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
+        let! response = buyerClient.PostAsync("/auctions/999/bids", Helpers.createJsonStringContent Helpers.bidJson) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be NotFound" HttpStatusCode.NotFound
@@ -228,10 +228,10 @@ let apiTests = testList "API Tests" [
         let content = Helpers.createJsonStringContent Helpers.firstAuctionReqJson
         
         // Add auction first time
-        let! _ = client.PostAsync("/auction", content) |> Async.AwaitTask
+        let! _ = client.PostAsync("/auctions", content) |> Async.AwaitTask
         
         // Act - try to add same auction again
-        let! response = client.PostAsync("/auction", content) |> Async.AwaitTask
+        let! response = client.PostAsync("/auctions", content) |> Async.AwaitTask
         
         // Assert
         response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest

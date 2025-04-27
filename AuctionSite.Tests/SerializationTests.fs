@@ -16,8 +16,8 @@ let sampleCommandsFile = "./.tmp/test-samples/sample-commands.jsonl"
 
 let vac0 = createAmount Currency.VAC 0L
 let timedAscending = TimedAscending { 
-    ReservePrice = vac0
-    MinRaise = vac0
+    ReservePrice = 0
+    MinRaise = 0
     TimeFrame = TimeSpan.Zero 
 }
 
@@ -54,7 +54,7 @@ let setupSampleFiles() =
 let serializationTests = testList "Serialization Tests" [
     testList "Serialization" [
         test "Can deserialize AuctionType" {
-            let json = "\"English|VAC0|VAC0|0\""
+            let json = "\"English|0|0|0\""
             let deserializedOption = 
                 match AuctionType.TryParse <| json.Trim('"') with
                 | Some t -> t

@@ -7,10 +7,10 @@ open AuctionSite.Domain.Patterns
 /// Options for TimedAscending (English) auctions
 type TimedAscendingOptions = {
     /// Minimum sale price. If the final bid does not reach this price, the item remains unsold.
-    ReservePrice: Amount
+    ReservePrice: AmountValue
     
     /// Minimum amount by which the next bid must exceed the current highest bid.
-    MinRaise: Amount
+    MinRaise: AmountValue
     
     /// Time frame after which the auction ends if no new bids are placed.
     TimeFrame: TimeSpan
@@ -23,14 +23,12 @@ type TimedAscendingOptions = {
     static member TryParse (s: string) =
         let parts = s.Split('|') |> List.ofArray
         match parts with
-        | ["English"; Amount reservePrice; Amount minRaise; Int32 seconds]->
-            if reservePrice.Currency = minRaise.Currency then
-                Some {
-                    ReservePrice = reservePrice
-                    MinRaise = minRaise
-                    TimeFrame = TimeSpan.FromSeconds(float seconds)
-                }
-            else None
+        | ["English"; AmountValue reservePrice; AmountValue minRaise; Int32 seconds]->
+            Some {
+                ReservePrice = reservePrice
+                MinRaise = minRaise
+                TimeFrame = TimeSpan.FromSeconds(float seconds)
+            }
         | _ -> None
 /// State for TimedAscending auctions
 type TimedAscendingState =
@@ -46,8 +44,8 @@ module TimedAscending =
     /// Create default options for a TimedAscending auction
     let defaultOptions (currency: Currency) =
         {
-            ReservePrice = { Currency = currency; Value = 0L }
-            MinRaise = { Currency = currency; Value = 0L }
+            ReservePrice = 0L
+            MinRaise = 0L
             TimeFrame = TimeSpan.Zero
         }
         
@@ -105,7 +103,7 @@ module TimedAscending =
                         let nextExpiry' = max nextExpiry (now.Add(opt.TimeFrame))
                         let minRaiseAmount = opt.MinRaise
                         
-                        if isGreaterThan bidAmount (add highestBidAmount minRaiseAmount) then
+                        if bidAmount > highestBidAmount + minRaiseAmount then
                             // Bid is high enough
                             OnGoing(bid :: bids, nextExpiry', opt), Ok()
                         else
@@ -123,7 +121,7 @@ module TimedAscending =
             member _.TryGetAmountAndWinner (state: TimedAscendingState) =
                 match state with
                 | HasEnded(bid :: _, _, opt) ->
-                    if isGreaterThan bid.BidAmount opt.ReservePrice then
+                    if bid.BidAmount > opt.ReservePrice then
                         Some(bid.BidAmount, bid.Bidder.UserId)
                     else
                         None

@@ -46,7 +46,7 @@ module SingleSealedBid =
                             bids 
                             |> Map.toList 
                             |> List.map snd 
-                            |> List.sortByDescending _.BidAmount.Value
+                            |> List.sortByDescending _.BidAmount
                         DisclosingBids(sortedBids, expiry, opt)
                     else
                         state

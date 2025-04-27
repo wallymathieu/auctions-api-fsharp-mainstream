@@ -15,15 +15,18 @@ module Money =
             | false, _ -> None
             | true, v -> Some v
     let (|Currency|_|) = Currency.tryParse
-
+    type AmountValue = int64
+    let (|AmountValue|_|) (s:string) = Int64.TryParse s |> function
+        | true, v -> Some v
+        | false, _ -> None
     /// Represents a monetary amount with a specific currency
     type Amount = { 
         Currency: Currency 
-        Value: int64
+        Value: AmountValue
     } with
         override this.ToString() = $"%A{this.Currency}%d{this.Value}"
 
-    let private amountRegex = Regex("(?<currency>[A-Z]+)(?<value>[0-9]+)")
+    let private amountRegex = Regex "(?<currency>[A-Z]+)(?<value>[0-9]+)"
 
     /// Creates a new amount of specified currency and value
     let createAmount currency value = { Currency = currency; Value = value }

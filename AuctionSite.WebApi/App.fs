@@ -163,9 +163,9 @@ module Handler =
         let auctionRoutes =
             choose [
                 GET >=> route "/auctions" >=> getAllAuctions appState
-                GET >=> routef "/auction/%d" (getAuctionById appState)
-                POST >=> route "/auction" >=> createAuction onEvent appState getCurrentTime
-                POST >=> routef "/auction/%d/bid" (createBid onEvent appState getCurrentTime)
+                GET >=> routef "/auctions/%d" (getAuctionById appState)
+                POST >=> route "/auctions" >=> createAuction onEvent appState getCurrentTime
+                POST >=> routef "/auctions/%d/bids" (createBid onEvent appState getCurrentTime)
             ]
             
         let notFoundHandler =

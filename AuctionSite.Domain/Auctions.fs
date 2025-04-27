@@ -61,8 +61,6 @@ module Auction =
     let (|ValidBid|InvalidBid|) (auction: Auction, bid: Bid) =
         if bid.Bidder.UserId = auction.Seller.UserId then
             InvalidBid (SellerCannotPlaceBids(bid.Bidder.UserId, auction.AuctionId))
-        elif bid.BidAmount.Currency <> auction.AuctionCurrency then
-            InvalidBid (CurrencyConversion auction.AuctionCurrency)
         elif bid.At < auction.StartsAt then
             InvalidBid (AuctionHasNotStarted auction.AuctionId)
         elif bid.At > auction.Expiry then

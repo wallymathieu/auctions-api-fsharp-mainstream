@@ -36,7 +36,7 @@ let sampleBid = {
     ForAuction = sampleAuctionId
     Bidder = sampleBuyer
     At = sampleBidTime
-    BidAmount = sek 100L
+    BidAmount = 100L
 }
 
 // Sample buyers
@@ -45,8 +45,8 @@ let buyer2 = BuyerOrSeller("Buyer_2", "Buyer 2")
 let buyer3 = BuyerOrSeller("Buyer_3", "Buyer 3")
 
 // Sample bid amounts
-let bidAmount1 = sek 10L
-let bidAmount2 = sek 12L
+let bidAmount1 = 10L
+let bidAmount2 = 12L
 
 // Sample bids
 let bid1 = {
@@ -65,7 +65,7 @@ let bid2 = {
 
 let bid_less_than_2 = {
     Bidder = buyer3
-    BidAmount = sek 11L
+    BidAmount = 11L
     ForAuction = sampleAuctionId
     At = sampleStartsAt.AddSeconds(3.0)
 }

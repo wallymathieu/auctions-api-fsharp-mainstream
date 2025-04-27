@@ -73,7 +73,7 @@ let englishAuctionTests = testList "English Auction Tests" [
     }
 
     test "Can parse TimedAscending options from string" {
-        let sampleTypStr = "English|VAC0|VAC0|0"
+        let sampleTypStr = "English|0|0|0"
         let sampleTyp = TimedAscending.defaultOptions Currency.VAC
         
         let parsed = TimedAscendingOptions.TryParse sampleTypStr
@@ -82,17 +82,17 @@ let englishAuctionTests = testList "English Auction Tests" [
 
     test "Can serialize TimedAscending options to string" {
         let sampleTyp = TimedAscending.defaultOptions Currency.VAC
-        let sampleTypStr = "English|VAC0|VAC0|0"
+        let sampleTypStr = "English|0|0|0"
         
         let serialized = string sampleTyp
         serialized |> Expect.equal "Serialized options should match expected" sampleTypStr
     }
 
     test "Can deserialize options with values" {
-        let sampleWithValuesTypStr = "English|VAC10|VAC20|30"
+        let sampleWithValuesTypStr = "English|10|20|30"
         let sampleWithValuesTyp = { 
-            ReservePrice = createAmount Currency.VAC 10L
-            MinRaise = createAmount Currency.VAC 20L
+            ReservePrice = 10L
+            MinRaise = 20L
             TimeFrame = TimeSpan.FromSeconds(30.0)
         }
         
@@ -102,11 +102,11 @@ let englishAuctionTests = testList "English Auction Tests" [
 
     test "Can serialize options with values" {
         let sampleWithValuesTyp = { 
-            ReservePrice = createAmount Currency.VAC 10L
-            MinRaise = createAmount Currency.VAC 20L
+            ReservePrice = 10L
+            MinRaise = 20L
             TimeFrame = TimeSpan.FromSeconds(30.0)
         }
-        let sampleWithValuesTypStr = "English|VAC10|VAC20|30"
+        let sampleWithValuesTypStr = "English|10|20|30"
         
         let serialized = string sampleWithValuesTyp
         serialized |> Expect.equal "Serialized options with values should match expected" sampleWithValuesTypStr

@@ -33,7 +33,7 @@ type AddAuctionRequest = {
 
 /// Response for an auction bid
 type AuctionBidResponse = {
-    Amount: string
+    Amount: AmountValue
     Bidder: string
 }
 
@@ -60,14 +60,14 @@ type AuctionDetailResponse = {
     Currency: Currency
     Bids: AuctionBidResponse list
     Winner: string option
-    WinnerPrice: Amount option
+    WinnerPrice: AmountValue option
 }
 
 /// Convert from domain models to API responses
 module ResponseConverters =
     /// Convert a bid to an API response
     let toAuctionBidResponse (bid: Bid) : AuctionBidResponse = {
-        Amount = string bid.BidAmount
+        Amount = bid.BidAmount
         Bidder = bid.Bidder.ToString()
     }
     
@@ -104,7 +104,7 @@ module RequestConverters =
         ForAuction = auctionId
         Bidder = bidder
         At = time
-        BidAmount = createAmount currency req.Amount
+        BidAmount = req.Amount
     }
     
     /// Convert an auction request to a domain auction

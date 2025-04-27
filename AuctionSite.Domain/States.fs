@@ -15,7 +15,7 @@ type IState<'TState> =
     abstract member GetBids: 'TState -> Bid list
     
     /// Try to get the winning amount and winner, if the auction has a winner
-    abstract member TryGetAmountAndWinner: 'TState -> (Amount * UserId) option
+    abstract member TryGetAmountAndWinner: 'TState -> (AmountValue * UserId) option
     
     /// Check if the auction has ended
     abstract member HasEnded: 'TState -> bool

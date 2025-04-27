@@ -43,9 +43,8 @@ type Errors =
     | AuctionHasEnded of AuctionId
     | AuctionHasNotStarted of AuctionId
     | SellerCannotPlaceBids of UserId * AuctionId
-    | CurrencyConversion of Currency
     | InvalidUserData of string
-    | MustPlaceBidOverHighestBid of Amount
+    | MustPlaceBidOverHighestBid of AmountValue
     | AlreadyPlacedBid
 
 

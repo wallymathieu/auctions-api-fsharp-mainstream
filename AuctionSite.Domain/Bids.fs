@@ -13,7 +13,7 @@ type Bid = {
     [<JsonPropertyName("at")>]
     At: DateTime
     [<JsonPropertyName("amount")>]
-    BidAmount: Amount
+    BidAmount: AmountValue
 }
 
 module Bid =
@@ -27,5 +27,5 @@ module Bid =
     
     /// Sort bids by amount in descending order
     let sortByAmountDescending bids =
-        bids |> List.sortByDescending _.BidAmount.Value
+        bids |> List.sortByDescending _.BidAmount
 
