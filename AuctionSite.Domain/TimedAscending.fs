@@ -42,7 +42,7 @@ type TimedAscendingState =
 /// Functions for working with TimedAscending auctions
 module TimedAscending =
     /// Create default options for a TimedAscending auction
-    let defaultOptions (currency: Currency) =
+    let defaultOptions (_currency: Currency) =
         {
             ReservePrice = 0L
             MinRaise = 0L
@@ -103,7 +103,7 @@ module TimedAscending =
                         let nextExpiry' = max nextExpiry (now.Add(opt.TimeFrame))
                         let minRaiseAmount = opt.MinRaise
                         
-                        if bidAmount > highestBidAmount + minRaiseAmount then
+                        if bidAmount >= highestBidAmount + minRaiseAmount then
                             // Bid is high enough
                             OnGoing(bid :: bids, nextExpiry', opt), Ok()
                         else

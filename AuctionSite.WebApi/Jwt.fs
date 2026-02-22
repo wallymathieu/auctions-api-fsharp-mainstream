@@ -37,7 +37,7 @@ module Jwt =
             let decodedString = Encoding.UTF8.GetString(bytes)
             Some decodedString
         with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
-        | ex -> None
+        | _ -> None
     
     /// Parse JWT payload to JwtUser
     /// Here we 
@@ -46,7 +46,7 @@ module Jwt =
             let jwtUser = JsonSerializer.Deserialize<JwtUser>(jsonPayload, Serialization.serializerOptions())
             Some jwtUser
         with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
-        | ex -> None
+        | _ -> None
     
     /// Decode a JWT payload header value to a domain User
     /// Note that we are returning extra information that we typically do not want to include for unauthorized attackers.

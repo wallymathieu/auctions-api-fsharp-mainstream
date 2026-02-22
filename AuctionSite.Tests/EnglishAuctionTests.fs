@@ -72,6 +72,36 @@ let englishAuctionTests = testList "English Auction Tests" [
         | Error err -> err |> Expect.equal "Should get MustPlaceBidOverHighestBid error" (MustPlaceBidOverHighestBid bidAmount2)
     }
 
+    test "Can place bid equal to highest bid plus minRaise" {
+        // With minRaise = 5, a bid of exactly highestBid + 5 should be accepted
+        let options = { ReservePrice = 0L; MinRaise = 5L; TimeFrame = TimeSpan.Zero }
+        let auction = sampleAuctionOfType (TimedAscending options)
+        let emptyState = Auction.emptyState auction |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
+        
+        let state1, _ = stateHandler.AddBid bid1 emptyState  // bid1 = 10
+        // Next valid bid: exactly 10 + 5 = 15
+        let exactMinRaiseBid = { bid2 with Bidder = buyer2; BidAmount = bid1.BidAmount + 5L }
+        let _, result = stateHandler.AddBid exactMinRaiseBid state1
+        match result with
+        | Ok () -> ()
+        | Error err -> failtestf "Expected bid of exactly highestBid + minRaise to be accepted, got: %A" err
+    }
+
+    test "Cannot place bid below highest bid plus minRaise" {
+        // With minRaise = 5, a bid of highestBid + 4 should be rejected
+        let options = { ReservePrice = 0L; MinRaise = 5L; TimeFrame = TimeSpan.Zero }
+        let auction = sampleAuctionOfType (TimedAscending options)
+        let emptyState = Auction.emptyState auction |> function | Choice2Of2 s -> s | _ -> failwith "Expected TimedAscending state"
+        
+        let state1, _ = stateHandler.AddBid bid1 emptyState  // bid1 = 10
+        // A bid of 10 + 4 = 14 should be rejected (less than minRaise of 5)
+        let tooLowBid = { bid2 with Bidder = buyer2; BidAmount = bid1.BidAmount + 4L }
+        let _, result = stateHandler.AddBid tooLowBid state1
+        match result with
+        | Ok () -> failtest "Expected bid below highestBid + minRaise to be rejected"
+        | Error err -> err |> Expect.equal "Should get MustPlaceBidOverHighestBid error" (MustPlaceBidOverHighestBid bid1.BidAmount)
+    }
+
     test "Can parse TimedAscending options from string" {
         let sampleTypStr = "English|0|0|0"
         let sampleTyp = TimedAscending.defaultOptions Currency.VAC
