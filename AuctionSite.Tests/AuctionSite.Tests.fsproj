@@ -13,6 +13,7 @@
     <Compile Include="VickreyAuctionTests.fs" />
     <Compile Include="BlindAuctionTests.fs" />
     <Compile Include="SerializationTests.fs" />
+    <Compile Include="MartenTests.fs" />
     <Compile Include="ApiTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
@@ -23,6 +24,8 @@
     <PackageReference Include="Expecto.FsCheck" Version="10.2.3" />
     <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.15.3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.4" />
+    <PackageReference Include="Testcontainers" Version="4.4.0" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.4.0" />
   </ItemGroup>
 
   <ItemGroup>
