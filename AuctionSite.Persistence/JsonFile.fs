@@ -8,7 +8,7 @@ open AuctionSite.Domain
 module JsonFile =
     
     /// Generic read function for any JSON-decodable type
-    let readJsonFile<'T> (path: string) : Async<'T list option> = async {
+    let readJsonFile<'T> (warn: string -> exn -> unit) (path: string) : Async<'T list option> = async {
         if not (File.Exists path) then
             return None
         else
@@ -20,7 +20,7 @@ module JsonFile =
                         Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
                     with
                     | :? JsonException as ex ->
-                        eprintfn "WARNING: Skipping malformed JSON line: %s\nError: %s" line ex.Message
+                        warn (sprintf "Skipping malformed JSON line in '%s': %s" path line) ex
                         None)
                 |> Array.toList
             return Some items
@@ -45,17 +45,17 @@ module JsonFile =
     }
     
     /// Read commands from a JSON file
-    let readCommands (path: string) : Async<Command list option> =
-        readJsonFile<Command> path
-    
+    let readCommands (warn: string -> exn -> unit) (path: string) : Async<Command list option> =
+        readJsonFile<Command> warn path
+
     /// Write commands to a JSON file
     let writeCommands (path: string) (commands: Command list) : Async<unit> =
         writeJsonFile<Command> path commands
-    
+
     /// Read events from a JSON file
-    let readEvents (path: string) : Async<Event list option> =
-        readJsonFile<Event> path
-        
+    let readEvents (warn: string -> exn -> unit) (path: string) : Async<Event list option> =
+        readJsonFile<Event> warn path
+
     /// Write events to a JSON file
     let writeEvents (path: string) (events: Event list) : Async<unit> =
         writeJsonFile<Event> path events

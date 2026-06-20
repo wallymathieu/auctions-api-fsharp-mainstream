@@ -33,6 +33,8 @@ let setupTempDirectory() =
     if File.Exists tmpSampleCommands then
         File.Delete tmpSampleCommands
 
+let noWarn (_: string) (_: exn) = ()
+
 // Helper function to set up sample files
 let setupSampleFiles() =
     setupTempDirectory()
@@ -91,7 +93,7 @@ let serializationTests = testList "Serialization Tests" [
     testList "File Operations" [
         testAsync "Can read commands from JSON file" {
             setupSampleFiles()
-            let! commandsResult = readCommands sampleCommandsFile
+            let! commandsResult = readCommands noWarn sampleCommandsFile
             
             commandsResult |> Expect.isSome "Should be able to read commands"
             match commandsResult with
@@ -104,7 +106,7 @@ let serializationTests = testList "Serialization Tests" [
         testAsync "Can write and read commands" {
             setupSampleFiles()
             // Get sample commands
-            let! commandsOption = readCommands sampleCommandsFile
+            let! commandsOption = readCommands noWarn sampleCommandsFile
             let commands = 
                 match commandsOption with
                 | Some cmds -> cmds
@@ -121,7 +123,7 @@ let serializationTests = testList "Serialization Tests" [
             do! writeCommands tmpSampleCommands commands2
             
             // Read back the commands
-            let! readCommandsOption = readCommands tmpSampleCommands
+            let! readCommandsOption = readCommands noWarn tmpSampleCommands
             match readCommandsOption with
             | Some readCmds ->
                 // Verify all commands were written and read correctly
@@ -142,7 +144,7 @@ let serializationTests = testList "Serialization Tests" [
             do! writeEvents tmpSampleCommands events
             
             // Read back the events
-            let! readEventsOption = readEvents tmpSampleCommands
+            let! readEventsOption = readEvents noWarn tmpSampleCommands
             match readEventsOption with
             | Some readEvents ->
                 // Verify all events were written and read correctly
