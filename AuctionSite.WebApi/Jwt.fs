@@ -34,19 +34,16 @@ module Jwt =
     let decodeBase64 (base64: string) : Option<string> =
         try
             let bytes = Convert.FromBase64String(base64)
-            let decodedString = Encoding.UTF8.GetString(bytes)
-            Some decodedString
-        with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
-        | _ -> None
-    
+            Some(Encoding.UTF8.GetString(bytes))
+        with
+        | :? FormatException -> None
+
     /// Parse JWT payload to JwtUser
-    /// Here we 
     let parseJwtPayload (jsonPayload: string) : Option<JwtUser> =
         try
-            let jwtUser = JsonSerializer.Deserialize<JwtUser>(jsonPayload, Serialization.serializerOptions())
-            Some jwtUser
-        with // To catch all exceptions is not recommended since this will make the program harder to debug and understand
-        | _ -> None
+            Some(JsonSerializer.Deserialize<JwtUser>(jsonPayload, Serialization.serializerOptions()))
+        with
+        | :? JsonException -> None
     
     /// Decode a JWT payload header value to a domain User
     /// Note that we are returning extra information that we typically do not want to include for unauthorized attackers.

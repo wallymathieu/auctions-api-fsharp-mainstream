@@ -13,13 +13,15 @@ module JsonFile =
             return None
         else
             let! content = File.ReadAllLinesAsync(path) |> Async.AwaitTask
-            let items = 
-                content 
-                |> Array.choose (fun line -> 
-                    try 
+            let items =
+                content
+                |> Array.choose (fun line ->
+                    try
                         Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
                     with
-                    | _ -> None)
+                    | :? JsonException as ex ->
+                        eprintfn "WARNING: Skipping malformed JSON line: %s\nError: %s" line ex.Message
+                        None)
                 |> Array.toList
             return Some items
     }

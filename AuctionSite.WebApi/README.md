@@ -10,11 +10,7 @@ The Web Api is intentionally simplistic.
 
 ### Concurrency
 
-We are not dealing with what could happen if you send bids at the same time. How persistence is dealt with is overly simplistic. This could of course (as we often see) be the case even for production apps.
-
-What happens when multiple bidders send the same bid at the same time? Just looking at the WebApi part you note that [AppState.Auctions](./AuctionSite.WebApi/App.fs#L14) is not thread safe.
-
-In a real world case, you could have Terms of service with explicit limitations in order to limit the software complexity. You could also design user interface to not expect an immediate response.
+Concurrent writes to `AppState.Auctions` are serialized with a `SemaphoreSlim(1,1)` so the in-memory state is consistent for a single server instance. This does not handle multi-instance deployments — for that, a database with optimistic concurrency (row versions) or a distributed actor framework would be needed.
 
 ### Administration
 

@@ -1,6 +1,7 @@
 namespace AuctionSite.WebApi
 
 open System
+open System.Threading
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.DependencyInjection
@@ -12,23 +13,15 @@ open AuctionSite.Domain
 
 /// Application state
 type AppState = {
-    /// NOTE: This is overly simplistic and not thread safe.
-    /// You could look into thread lock, actors or use a message queue for updates.
-    /// Using thread lock to synchronize state is not recommended in a web server 
-    /// context since we cannot assume that there will only be one server instance.
-    /// </br>
-    /// In order to use actors in a web scenario, you would need a distributed actor framework.
-    /// </br>
-    /// In a real-world application, you could use a database with row versions and throw an error
-    /// if there are conflicting writes.
     mutable Auctions: Repository
+    Lock: SemaphoreSlim
 }
 
 /// Module for initializing application state
 module AppStateInit =
     /// Initialize the application state
     let initAppState (initialAuctions: Repository) : AppState =
-        { Auctions = initialAuctions }
+        { Auctions = initialAuctions; Lock = SemaphoreSlim(1, 1) }
 
 /// Handlers for the web API
 module Handler =
@@ -70,34 +63,26 @@ module Handler =
                     fun next ctx ->
                         task {
                             let now = getCurrentTime()
-                            let repository = appState.Auctions
-                            
-                            // Find the auction
-                            match getAuction appState auctionId with
-                            | Some (auction, _) ->
-                                // Create bid
-                                let bid = RequestConverters.toBid bidReq auctionId user now auction.AuctionCurrency
-                                let command = PlaceBid(now, bid)
-                                
-                                // Process command
-                                let eventResult, updatedRepo = Repository.handle command repository
-                                
-                                match eventResult with
-                                | Ok event ->
-                                    // Update application state
-                                    appState.Auctions <- updatedRepo
-                                    
-                                    // Trigger event handler
-                                    do! onEvent event
-                                    
-                                    // Return success
-                                    return! Successful.OK event next ctx
-                                | Error (UnknownAuction _) ->
+                            do! appState.Lock.WaitAsync() |> Async.AwaitTask
+                            try
+                                match getAuction appState auctionId with
+                                | Some (auction, _) ->
+                                    let bid = RequestConverters.toBid bidReq auctionId user now auction.AuctionCurrency
+                                    let command = PlaceBid(now, bid)
+                                    let eventResult, updatedRepo = Repository.handle command appState.Auctions
+                                    match eventResult with
+                                    | Ok event ->
+                                        appState.Auctions <- updatedRepo
+                                        do! onEvent event
+                                        return! Successful.OK event next ctx
+                                    | Error (UnknownAuction _) ->
+                                        return! RequestErrors.NOT_FOUND "Auction not found" next ctx
+                                    | Error err ->
+                                        return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
+                                | None ->
                                     return! RequestErrors.NOT_FOUND "Auction not found" next ctx
-                                | Error err ->
-                                    return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
-                            | None ->
-                                return! RequestErrors.NOT_FOUND "Auction not found" next ctx
+                            finally
+                                appState.Lock.Release() |> ignore
                         }
                 ) next ctx
             }
@@ -121,30 +106,23 @@ module Handler =
                 let! auctionReq = ctx.BindJsonAsync<AddAuctionRequest>()
                 
                 return! withAuth (fun user ->
-                    fun next ctx -> 
+                    fun next ctx ->
                         task {
                             let now = getCurrentTime()
-                            let repository = appState.Auctions
-                            
-                            // Create auction
-                            let auction = RequestConverters.toAuction auctionReq user
-                            let command = AddAuction(now, auction)
-                            
-                            // Process command
-                            let eventResult, updatedRepo = Repository.handle command repository
-                            
-                            match eventResult with
-                            | Ok event ->
-                                // Update application state
-                                appState.Auctions <- updatedRepo
-                                
-                                // Trigger event handler
-                                do! onEvent event
-                                
-                                // Return success
-                                return! Successful.OK event next ctx
-                            | Error err ->
-                                return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
+                            do! appState.Lock.WaitAsync() |> Async.AwaitTask
+                            try
+                                let auction = RequestConverters.toAuction auctionReq user
+                                let command = AddAuction(now, auction)
+                                let eventResult, updatedRepo = Repository.handle command appState.Auctions
+                                match eventResult with
+                                | Ok event ->
+                                    appState.Auctions <- updatedRepo
+                                    do! onEvent event
+                                    return! Successful.OK event next ctx
+                                | Error err ->
+                                    return! RequestErrors.BAD_REQUEST $"%A{err}" next ctx
+                            finally
+                                appState.Lock.Release() |> ignore
                         }
                 ) next ctx
             }

@@ -7,8 +7,11 @@ open Microsoft.Extensions.Hosting
 open AuctionSite.Domain
 open AuctionSite.Persistence.JsonFile
 
-// Path to the events file
-let eventsFile = "tmp/events.jsonl"
+// Path to the events file — override with EVENTS_FILE environment variable
+let eventsFile =
+    Environment.GetEnvironmentVariable("EVENTS_FILE")
+    |> Option.ofObj
+    |> Option.defaultValue "tmp/events.jsonl"
 
 // Event handler function
 let onEvent (event: Event) =
