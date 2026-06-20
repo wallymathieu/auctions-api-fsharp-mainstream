@@ -8,18 +8,20 @@ open AuctionSite.Domain
 module JsonFile =
     
     /// Generic read function for any JSON-decodable type
-    let readJsonFile<'T> (path: string) : Async<'T list option> = async {
+    let readJsonFile<'T> (warn: string -> string -> exn -> unit) (path: string) : Async<'T list option> = async {
         if not (File.Exists path) then
             return None
         else
             let! content = File.ReadAllLinesAsync(path) |> Async.AwaitTask
-            let items = 
-                content 
-                |> Array.choose (fun line -> 
-                    try 
+            let items =
+                content
+                |> Array.choose (fun line ->
+                    try
                         Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
                     with
-                    | _ -> None)
+                    | :? JsonException as ex ->
+                        warn path line ex
+                        None)
                 |> Array.toList
             return Some items
     }
@@ -43,17 +45,17 @@ module JsonFile =
     }
     
     /// Read commands from a JSON file
-    let readCommands (path: string) : Async<Command list option> =
-        readJsonFile<Command> path
-    
+    let readCommands (warn: string -> string -> exn -> unit) (path: string) : Async<Command list option> =
+        readJsonFile<Command> warn path
+
     /// Write commands to a JSON file
     let writeCommands (path: string) (commands: Command list) : Async<unit> =
         writeJsonFile<Command> path commands
-    
+
     /// Read events from a JSON file
-    let readEvents (path: string) : Async<Event list option> =
-        readJsonFile<Event> path
-        
+    let readEvents (warn: string -> string -> exn -> unit) (path: string) : Async<Event list option> =
+        readJsonFile<Event> warn path
+
     /// Write events to a JSON file
     let writeEvents (path: string) (events: Event list) : Async<unit> =
         writeJsonFile<Event> path events
