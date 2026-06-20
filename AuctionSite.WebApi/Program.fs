@@ -37,7 +37,9 @@ let main args =
     let warn (msg: string) (ex: exn) = logger.LogWarning(ex, "{Warning}", msg)
 
     // Ensure directory exists and load events
-    Directory.CreateDirectory(Path.GetDirectoryName(eventsFile)) |> ignore
+    let eventsDir = Path.GetDirectoryName(eventsFile)
+    if not (String.IsNullOrEmpty(eventsDir)) then
+        Directory.CreateDirectory(eventsDir) |> ignore
     let events =
         match readEvents warn eventsFile |> Async.RunSynchronously with
         | Some e -> e
