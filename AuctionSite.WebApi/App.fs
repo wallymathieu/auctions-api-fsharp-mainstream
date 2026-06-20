@@ -21,7 +21,7 @@ type AppState = {
 module AppStateInit =
     /// Initialize the application state
     let initAppState (initialAuctions: Repository) : AppState =
-        { Auctions = initialAuctions; Lock = SemaphoreSlim(1, 1) }
+        { Auctions = initialAuctions; Lock = new SemaphoreSlim(1, 1) }
 
 /// Handlers for the web API
 module Handler =
