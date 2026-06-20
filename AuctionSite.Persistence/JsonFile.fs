@@ -8,7 +8,7 @@ open AuctionSite.Domain
 module JsonFile =
     
     /// Generic read function for any JSON-decodable type
-    let readJsonFile<'T> (warn: string -> exn -> unit) (path: string) : Async<'T list option> = async {
+    let readJsonFile<'T> (warn: string -> string -> exn -> unit) (path: string) : Async<'T list option> = async {
         if not (File.Exists path) then
             return None
         else
@@ -20,7 +20,7 @@ module JsonFile =
                         Some(JsonSerializer.Deserialize<'T>(line, Serialization.serializerOptions()))
                     with
                     | :? JsonException as ex ->
-                        warn (sprintf "Skipping malformed JSON line in '%s': %s" path line) ex
+                        warn path line ex
                         None)
                 |> Array.toList
             return Some items
@@ -45,7 +45,7 @@ module JsonFile =
     }
     
     /// Read commands from a JSON file
-    let readCommands (warn: string -> exn -> unit) (path: string) : Async<Command list option> =
+    let readCommands (warn: string -> string -> exn -> unit) (path: string) : Async<Command list option> =
         readJsonFile<Command> warn path
 
     /// Write commands to a JSON file
@@ -53,7 +53,7 @@ module JsonFile =
         writeJsonFile<Command> path commands
 
     /// Read events from a JSON file
-    let readEvents (warn: string -> exn -> unit) (path: string) : Async<Event list option> =
+    let readEvents (warn: string -> string -> exn -> unit) (path: string) : Async<Event list option> =
         readJsonFile<Event> warn path
 
     /// Write events to a JSON file

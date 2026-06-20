@@ -34,7 +34,8 @@ let main args =
 
     // Bind persistence warnings to the ASP.NET Core logger
     let logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AuctionSite.Persistence")
-    let warn (msg: string) (ex: exn) = logger.LogWarning(ex, "{Warning}", msg)
+    let warn (filePath: string) (_line: string) (ex: exn) =
+        logger.LogWarning(ex, "Skipping malformed JSON line in {FilePath}", filePath)
 
     // Ensure directory exists and load events
     let eventsDir = Path.GetDirectoryName(eventsFile)

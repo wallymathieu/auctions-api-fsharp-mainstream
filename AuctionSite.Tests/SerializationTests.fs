@@ -33,7 +33,7 @@ let setupTempDirectory() =
     if File.Exists tmpSampleCommands then
         File.Delete tmpSampleCommands
 
-let noWarn (_: string) (_: exn) = ()
+let noWarn (_: string) (_: string) (_: exn) = ()
 
 // Helper function to set up sample files
 let setupSampleFiles() =
