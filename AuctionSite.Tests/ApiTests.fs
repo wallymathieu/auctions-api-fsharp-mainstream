@@ -237,3 +237,101 @@ let apiTests = testList "API Tests" [
         response.StatusCode |> Expect.equal "Status code should be BadRequest" HttpStatusCode.BadRequest
     }
 ]
+
+module Rejections =
+    let undecodableJwtPayloads = [
+        "not base64 JSON", "aGVsbG8="
+        "invalid user type", "eyJzdWIiOiJhMyIsInVfdHlwIjoiOSJ9"
+        "not base64", "not-base64!!"
+        "base64 JSON null", "bnVsbA=="
+    ]
+
+    let unreadableAuctionBodies = [
+        "empty", ""
+        "empty object", "{}"
+        "not JSON", "not json"
+        "JSON null", "null"
+        "truncated JSON", """{"id":"""
+        "id of wrong type", """{"id":"x","startsAt":"2018-01-01T10:00:00.000Z","endsAt":"2019-01-01T10:00:00.000Z","title":"t"}"""
+        "missing title", """{"id":1,"startsAt":"2018-01-01T10:00:00.000Z","endsAt":"2019-01-01T10:00:00.000Z"}"""
+    ]
+
+    let unreadableBidBodies = [
+        "empty", ""
+        "empty object", "{}"
+        "not JSON", "not json"
+        "JSON null", "null"
+        "truncated JSON", """{"amount":"""
+        "amount of wrong type", """{"amount":"eleven"}"""
+    ]
+
+    let anyBodies validBody = ("valid", validBody) :: unreadableBidBodies
+
+    let clientWithHeader (server: TestServer) (jwtPayload: string option) =
+        let client = server.CreateClient()
+        jwtPayload |> Option.iter (fun value -> client.DefaultRequestHeaders.TryAddWithoutValidation("x-jwt-payload", value) |> ignore)
+        client
+
+    let addFirstAuction (server: TestServer) = async {
+        let client = Helpers.getClientWithJwt server Helpers.sellerJwtPayload
+        let! response = client.PostAsync("/auctions", Helpers.createJsonStringContent Helpers.firstAuctionReqJson) |> Async.AwaitTask
+        response.StatusCode |> Expect.equal "Setup auction should be added" HttpStatusCode.OK
+    }
+
+    let postAndExpect (expected: HttpStatusCode) (prepare: TestServer -> Async<unit>) (jwtPayload: string option) (path: string) (body: string) = async {
+        let testEvents = ResizeArray<Event>()
+        use server = createTestServer(testEvents)
+        do! prepare server
+        let eventsBefore = testEvents.Count
+        let client = clientWithHeader server jwtPayload
+
+        let! response = client.PostAsync(path, Helpers.createJsonStringContent body) |> Async.AwaitTask
+        let! responseBody = response.Content.ReadAsStringAsync() |> Async.AwaitTask
+
+        response.StatusCode |> Expect.equal "Status code" expected
+        Expect.isFalse "Body should not name an exception" (responseBody.Contains "Exception")
+        Expect.isFalse "Body should not contain a stack trace" (responseBody.Contains "   at ")
+        testEvents.Count |> Expect.equal "No event should be recorded" eventsBefore
+    }
+
+    let noSetup (_: TestServer) = async { return () }
+
+    let headers =
+        ("no header", None) :: (undecodableJwtPayloads |> List.map (fun (name, value) -> name, Some value))
+
+    let auctionExistence = [ "auction 1 missing", noSetup; "auction 1 exists", addFirstAuction ]
+
+[<Tests>]
+let rejectionTests = testList "POST rejections" [
+    testList "Unauthenticated POST /auctions returns 401" [
+        for headerName, header in Rejections.headers do
+            for bodyName, body in Rejections.anyBodies Helpers.firstAuctionReqJson do
+                testAsync $"{headerName}, {bodyName} body" {
+                    do! Rejections.postAndExpect HttpStatusCode.Unauthorized Rejections.noSetup header "/auctions" body
+                }
+    ]
+
+    testList "Unauthenticated POST /auctions/1/bids returns 401" [
+        for existence, setup in Rejections.auctionExistence do
+            for headerName, header in Rejections.headers do
+                for bodyName, body in Rejections.anyBodies Helpers.bidJson do
+                    testAsync $"{existence}, {headerName}, {bodyName} body" {
+                        do! Rejections.postAndExpect HttpStatusCode.Unauthorized setup header "/auctions/1/bids" body
+                    }
+    ]
+
+    testList "Authenticated POST /auctions with unreadable body returns 400" [
+        for bodyName, body in Rejections.unreadableAuctionBodies do
+            testAsync $"{bodyName} body" {
+                do! Rejections.postAndExpect HttpStatusCode.BadRequest Rejections.noSetup (Some Helpers.sellerJwtPayload) "/auctions" body
+            }
+    ]
+
+    testList "Authenticated POST /auctions/{id}/bids with unreadable body returns 400" [
+        for existence, setup in Rejections.auctionExistence do
+            for bodyName, body in Rejections.unreadableBidBodies do
+                testAsync $"{existence}, {bodyName} body" {
+                    do! Rejections.postAndExpect HttpStatusCode.BadRequest setup (Some Helpers.buyerJwtPayload) "/auctions/1/bids" body
+                }
+    ]
+]
