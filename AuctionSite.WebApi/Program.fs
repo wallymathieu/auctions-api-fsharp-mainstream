@@ -29,6 +29,7 @@ let getCurrentTime() = DateTime.UtcNow
 [<EntryPoint>]
 let main args =
     let builder = WebApplication.CreateBuilder(args)
+    Listen.configure builder
     Handler.configureServices builder.Services
     let app = builder.Build()
 
@@ -54,6 +55,5 @@ let main args =
     app.UseCors("CorsPolicy") |> ignore
     Handler.configureApp app appState onEvent getCurrentTime
 
-    printfn "Starting server on http://localhost:8080"
-    app.Run("http://localhost:8080")
+    app.Run()
     0

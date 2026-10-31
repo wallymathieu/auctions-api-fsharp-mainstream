@@ -14,6 +14,7 @@
     <Compile Include="BlindAuctionTests.fs" />
     <Compile Include="SerializationTests.fs" />
     <Compile Include="ApiTests.fs" />
+    <Compile Include="ListenTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

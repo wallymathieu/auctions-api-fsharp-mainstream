@@ -45,7 +45,14 @@ dotnet run --project AuctionSite.Tests
 dotnet run --project AuctionSite.WebApi
 ```
 
-The server will start on http://localhost:8080 with the following endpoints:
+The server listens on http://localhost:8080 by default. Set `ASPNETCORE_URLS` or pass `--urls` to listen elsewhere:
+
+```bash
+ASPNETCORE_URLS=http://0.0.0.0:9090 dotnet run --project AuctionSite.WebApi
+dotnet run --project AuctionSite.WebApi -- --urls http://localhost:9091
+```
+
+It serves the following endpoints:
 
 - `GET /auctions` - Get all auctions
 - `GET /auctions/{id}` - Get auction by ID

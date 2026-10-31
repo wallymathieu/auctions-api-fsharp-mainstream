@@ -14,6 +14,7 @@ module Tests =
             BlindAuctionTests.blindAuctionStateTests
             SerializationTests.serializationTests
             ApiTests.apiTests
+            ListenTests.listenTests
         ]
 
 [<EntryPoint>]
