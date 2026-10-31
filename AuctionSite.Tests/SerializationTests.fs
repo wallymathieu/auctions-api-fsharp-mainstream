@@ -137,6 +137,22 @@ let serializationTests = testList "Serialization Tests" [
                     failtest "Failed to read written events"
             })
         }
+        
+        testAsync "Load events creates the missing directory and finds no events" {
+            let dir = Path.Combine(".tmp", "load-events", string (Guid.NewGuid()))
+            let! events = loadEvents noWarn (Path.Combine(dir, "events.jsonl"))
+            events |> Expect.isEmpty "no events"
+            Directory.Exists dir |> Expect.isTrue "directory created"
+        }
+
+        testAsync "Load events reads the stored events" {
+            let path = Path.Combine(".tmp", "load-events", string (Guid.NewGuid()), "events.jsonl")
+            let stored = [ AuctionAdded(sampleStartsAt, sampleAuction); BidAccepted(sampleBidTime, bid1) ]
+            let! _ = loadEvents noWarn path
+            do! writeEvents path stored
+            let! events = loadEvents noWarn path
+            events |> Expect.equal "stored events" stored
+        }
 
         test "Can serialize and deserialize AddAuction command" {
             let serialized = JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())

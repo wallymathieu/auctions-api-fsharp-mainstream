@@ -59,3 +59,12 @@ module JsonFile =
     /// Write events to a JSON file
     let writeEvents (path: string) (events: Event list) : Async<unit> =
         writeJsonFile<Event> path events
+
+    /// Create the events file's directory and read its events; none when the file is missing
+    let loadEvents (warn: string -> string -> exn -> unit) (path: string) : Async<Event list> = async {
+        let dir = Path.GetDirectoryName path
+        if not (System.String.IsNullOrEmpty dir) then
+            Directory.CreateDirectory dir |> ignore
+        let! events = readEvents warn path
+        return Option.defaultValue [] events
+    }

@@ -1,7 +1,6 @@
 module AuctionSite.WebApi.Program
 
 open System
-open System.IO
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
@@ -38,15 +37,7 @@ let main args =
     let warn (filePath: string) (_line: string) (ex: exn) =
         logger.LogWarning(ex, "Skipping malformed JSON line in {FilePath}", filePath)
 
-    // Ensure directory exists and load events
-    let eventsDir = Path.GetDirectoryName(eventsFile)
-    if not (String.IsNullOrEmpty(eventsDir)) then
-        Directory.CreateDirectory(eventsDir) |> ignore
-    let events =
-        match readEvents warn eventsFile |> Async.RunSynchronously with
-        | Some e -> e
-        | None -> []
-
+    let events = loadEvents warn eventsFile |> Async.RunSynchronously
     let initialState = Repository.eventsToAuctionStates events
     let appState = AppStateInit.initAppState initialState
 
