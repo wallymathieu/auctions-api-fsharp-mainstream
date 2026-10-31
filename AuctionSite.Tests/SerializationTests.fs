@@ -10,9 +10,7 @@ open AuctionSite.Domain
 open AuctionSite.Tests.SampleData
 open AuctionSite.Persistence.JsonFile
 
-// Test setup and helper functions
-let tmpSampleCommands = "./.tmp/test-sample-commands.jsonl"
-let sampleCommandsFile = "./.tmp/test-samples/sample-commands.jsonl"
+let scratchDirectory = "./.tmp"
 
 let vac0 = createAmount Currency.VAC 0L
 let timedAscending = TimedAscending { 
@@ -24,33 +22,22 @@ let timedAscending = TimedAscending {
 let addAuction = AddAuction(sampleStartsAt, sampleAuction)
 let bid = PlaceBid(sampleBidTime, bid1)
 
-// Helper function to set up the temp directory for tests
-let setupTempDirectory() =
-    let dir = Path.GetDirectoryName tmpSampleCommands
-    if not (Directory.Exists(dir)) then
-        Directory.CreateDirectory(dir) |> ignore
-        
-    if File.Exists tmpSampleCommands then
-        File.Delete tmpSampleCommands
-
 let noWarn (_: string) (_: string) (_: exn) = ()
 
-// Helper function to set up sample files
-let setupSampleFiles() =
-    setupTempDirectory()
-    
-    // Create test samples directory and sample file if it doesn't exist
-    let testSamplesDir = Path.GetDirectoryName(sampleCommandsFile)
-    if not (Directory.Exists(testSamplesDir)) then
-        Directory.CreateDirectory(testSamplesDir) |> ignore
-        
-    if not (File.Exists(sampleCommandsFile)) then
-        // Create some sample commands
-        let commands = [
-            JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
-            JsonSerializer.Serialize(bid, Serialization.serializerOptions())
-        ]
-        File.WriteAllLines(sampleCommandsFile, commands)
+let withScratchFile (body: string -> Async<unit>) = async {
+    Directory.CreateDirectory scratchDirectory |> ignore
+    let path = Path.Combine(scratchDirectory, $"serialization-test-{Guid.NewGuid():N}.jsonl")
+    try
+        do! body path
+    finally
+        File.Delete path
+}
+
+let writeSampleCommands (path: string) =
+    File.WriteAllLines(path, [
+        JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
+        JsonSerializer.Serialize(bid, Serialization.serializerOptions())
+    ])
 
 [<Tests>]
 let serializationTests = testList "Serialization Tests" [
@@ -92,67 +79,65 @@ let serializationTests = testList "Serialization Tests" [
     
     testList "File Operations" [
         testAsync "Can read commands from JSON file" {
-            setupSampleFiles()
-            let! commandsResult = readCommands noWarn sampleCommandsFile
-            
-            commandsResult |> Expect.isSome "Should be able to read commands"
-            match commandsResult with
-            | Some commands ->
-                Expect.isTrue "Should have at least one command" (commands.Length > 0)
-            | None -> 
-                failtest "Failed to read commands"
+            do! withScratchFile (fun sampleCommandsFile -> async {
+                writeSampleCommands sampleCommandsFile
+                let! commandsResult = readCommands noWarn sampleCommandsFile
+
+                commandsResult |> Expect.isSome "Should be able to read commands"
+                match commandsResult with
+                | Some commands ->
+                    Expect.isTrue "Should have at least one command" (commands.Length > 0)
+                | None ->
+                    failtest "Failed to read commands"
+            })
         }
-            
+
         testAsync "Can write and read commands" {
-            setupSampleFiles()
-            // Get sample commands
-            let! commandsOption = readCommands noWarn sampleCommandsFile
-            let commands = 
-                match commandsOption with
-                | Some cmds -> cmds
-                | None -> failwith "Failed to read sample commands"
-                
-            // Split commands and write them in two parts
-            let commands1, commands2 = 
-                match commands with
-                | [] -> [], []
-                | [cmd] -> [cmd], []
-                | cmd::rest -> [cmd], rest
-                
-            do! writeCommands tmpSampleCommands commands1
-            do! writeCommands tmpSampleCommands commands2
-            
-            // Read back the commands
-            let! readCommandsOption = readCommands noWarn tmpSampleCommands
-            match readCommandsOption with
-            | Some readCmds ->
-                // Verify all commands were written and read correctly
-                readCmds.Length |> Expect.equal "Read commands count should match original" commands.Length
-            | None ->
-                failtest "Failed to read written commands"
+            do! withScratchFile (fun sampleCommandsFile -> withScratchFile (fun writtenCommandsFile -> async {
+                writeSampleCommands sampleCommandsFile
+                let! commandsOption = readCommands noWarn sampleCommandsFile
+                let commands =
+                    match commandsOption with
+                    | Some cmds -> cmds
+                    | None -> failwith "Failed to read sample commands"
+
+                // Split commands and write them in two parts
+                let commands1, commands2 =
+                    match commands with
+                    | [] -> [], []
+                    | [cmd] -> [cmd], []
+                    | cmd::rest -> [cmd], rest
+
+                do! writeCommands writtenCommandsFile commands1
+                do! writeCommands writtenCommandsFile commands2
+
+                let! readCommandsOption = readCommands noWarn writtenCommandsFile
+                match readCommandsOption with
+                | Some readCmds ->
+                    readCmds.Length |> Expect.equal "Read commands count should match original" commands.Length
+                | None ->
+                    failtest "Failed to read written commands"
+            }))
         }
-        
+
         testAsync "Can read and write events" {
-            setupSampleFiles()
-            // Create sample events
-            let events = [
-                AuctionAdded(sampleStartsAt, sampleAuction)
-                BidAccepted(sampleBidTime, bid1)
-            ]
-            
-            // Write events
-            do! writeEvents tmpSampleCommands events
-            
-            // Read back the events
-            let! readEventsOption = readEvents noWarn tmpSampleCommands
-            match readEventsOption with
-            | Some readEvents ->
-                // Verify all events were written and read correctly
-                readEvents.Length |> Expect.equal "Read events count should match original" events.Length
-            | None ->
-                failtest "Failed to read written events"
+            do! withScratchFile (fun eventsFile -> async {
+                let events = [
+                    AuctionAdded(sampleStartsAt, sampleAuction)
+                    BidAccepted(sampleBidTime, bid1)
+                ]
+
+                do! writeEvents eventsFile events
+
+                let! readEventsOption = readEvents noWarn eventsFile
+                match readEventsOption with
+                | Some readEvents ->
+                    readEvents.Length |> Expect.equal "Read events count should match original" events.Length
+                | None ->
+                    failtest "Failed to read written events"
+            })
         }
-        
+
         test "Can serialize and deserialize AddAuction command" {
             let serialized = JsonSerializer.Serialize(addAuction, Serialization.serializerOptions())
             
