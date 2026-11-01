@@ -9,6 +9,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Jwt.fs" />
     <Compile Include="App.fs" />
+    <Compile Include="Listen.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
